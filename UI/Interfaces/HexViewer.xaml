@@ -1,0 +1,42 @@
+﻿<UserControl x:Class="TagEditor.UI.Windows.HexViewer"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:local="clr-namespace:TagEditor.UI.Windows"
+             mc:Ignorable="d" 
+             d:DesignHeight="450" d:DesignWidth="800">
+
+    <Border BorderBrush="#FF3D3D3D" BorderThickness="1" Margin="5,0,5,5">
+
+        <Grid>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="20"/>
+                <RowDefinition Height="20"/>
+                <RowDefinition Height="*"/>
+            </Grid.RowDefinitions>
+            <TextBlock Text="Hex Explorer" Foreground="#FFD6D6D6" Margin="5,0,0,0"/>
+
+            <StackPanel FlowDirection="LeftToRight" Grid.Row="1" Orientation="Horizontal" Margin="5,0,0,0">
+                <ToggleButton Content="OF" Width="20" />
+                <ToggleButton Content="ST" Width="20" />
+                <Separator Width="1" Height="15" Style="{StaticResource {x:Static ToolBar.SeparatorStyleKey}}" Background="#FF3D3D3D" Margin="4,2,4,2" />
+                <TextBox Text="18" Width="30" Background="{x:Null}" Foreground="#FFD6D6D6" BorderBrush="#FF3D3D3D" TextAlignment="Right" />
+                <Separator Width="1" Height="15" Style="{StaticResource {x:Static ToolBar.SeparatorStyleKey}}" Background="#FF3D3D3D" Margin="4,2,4,2" />
+                <ToggleButton Content="FO" Width="20" />
+            </StackPanel>
+
+            <Grid Grid.Row="2" Background="#FF1A1A1A" >
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="70"/>
+                    <ColumnDefinition Width="1*"/>
+                </Grid.ColumnDefinitions>
+                <TextBlock Foreground="#FFB96E00" FontFamily="Courier New" Text="000F1000 000F1012 000F1024 000F1036 000F1048 000F105A 000F106C 000F107E 000F1090" TextWrapping="WrapWithOverflow" />
+                <TextBlock Foreground="#FFCECECE" Grid.Column="1" Text="50 72 6F 63 65 73 73 3A 20 46 53 44 2D 57 69 6E 36 34 2D 53 68 69 70 70 69 6E 67 2E 65 78 65 0D 0A 55 45 20 76 65 72 73 69 6F 6E 3A 20 32 37 2E 32 30 0D 0A 54 69 6D 65 53 74 61 6D 70 3A 20 53 61 74 20 4D 61 72 20 20 34 20 31 32 3A 30 34 3A 35 37 20 32 30 32 33 0D 0A 0D 0A 5B 30 30 30 30 30 30 30 30 5D 20 30 30 30 30 30 31 41 44 37 36 30 44 36 33 43 30 20 50 61 63 6B 61 67 65 20 2F 53 63 72 69 70 74 2F 43 6F 72 65 55 4F 62 6A 65 63 74 0D 0A 5B 30 30 30 30 30 30 30 31 5D 20 30 30 30 30 30 31 41 44 36 43 41 44 31 43 43 30 20 43 6C 61 73 73 20 2F 53 63 72 69 70 74 2F 43 6F 72 65 55 4F 62 6A 65 63 74 2E 4F 62 6A 65 63 74 0D 0A 5B 30 30 30 30 30 30 30 32 5D 20 30 30 30 30 30 31 41 44 37 33 41 31 43 39 41 30 20 50 61 63 6B 61 67 65 20 2F 53 63 72 69 70 74 2F 45 6E 67 69 6E 65 0D 0A 5B 30 30 30 30 30 30 30 33 5D 20 30 30 30 30 30 31 41 44 36 44 42 37 43 41 30"
+                                       TextWrapping="WrapWithOverflow" FontFamily="Courier New" />
+
+            </Grid>
+        </Grid>
+    </Border>
+
+</UserControl>

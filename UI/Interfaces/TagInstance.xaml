@@ -1,0 +1,77 @@
+﻿<UserControl x:Class="TagEditor.UI.Windows.TagInstance"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:local="clr-namespace:TagEditor.UI.Windows"
+             mc:Ignorable="d" 
+             d:DesignHeight="450" d:DesignWidth="800">
+
+    <Grid>
+        <ScrollViewer>
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="50"/>
+                    <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
+                <StackPanel x:Name="indexes_panel" Margin="0,0,20,0">
+                    <TextBlock Text="1" HorizontalAlignment="Right" Foreground="#FF8E8E8E"/>
+                    <TextBlock Text="2" HorizontalAlignment="Right" Foreground="#FF8E8E8E"/>
+                    <TextBlock Text="3" HorizontalAlignment="Right" Foreground="#FF8E8E8E"/>
+                    <TextBlock Text="4" HorizontalAlignment="Right" Foreground="#FF8E8E8E"/>
+                    <TextBlock Text="5" HorizontalAlignment="Right" Foreground="#FF8E8E8E"/>
+                    <TextBlock Text="6" HorizontalAlignment="Right" Foreground="#FF8E8E8E"/>
+                    <TextBlock Text="7" HorizontalAlignment="Right" Foreground="#FF8E8E8E"/>
+                    <TextBlock Text="8" HorizontalAlignment="Right" Foreground="#FF8E8E8E"/>
+                    <TextBlock Text="9" HorizontalAlignment="Right" Foreground="#FF8E8E8E"/>
+                    <TextBlock Text="10" HorizontalAlignment="Right" Foreground="#FF8E8E8E"/>
+                    <TextBlock Text="11" HorizontalAlignment="Right" Foreground="#FF8E8E8E"/>
+                    <TextBlock Text="12" HorizontalAlignment="Right" Foreground="#FF8E8E8E"/>
+                </StackPanel>
+                <GridSplitter Width="1" />
+                <StackPanel x:Name="params_panel" Grid.Column="1" Margin="10,0,0,0" >
+                    <StackPanel Orientation="Horizontal" >
+                        <TextBlock Text="D:\tags\test\" Foreground="#FF8E8E8E" />
+                        <TextBlock Text="example_tag_name.atag" Foreground="#FFD6D6D6"/>
+                    </StackPanel>
+
+                </StackPanel>
+            </Grid>
+        </ScrollViewer>
+        
+
+        <Expander Grid.Column="1" Background="#FF383838" Width="350" MinHeight="25" Height="20" MaxHeight="45" HorizontalAlignment="Right" VerticalAlignment="Top" Margin="0,0,20,0">
+            <Expander.Header >
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="20"/>
+                        <ColumnDefinition Width="20"/>
+                    </Grid.ColumnDefinitions>
+                    <TextBox Text="Search Tag..." HorizontalAlignment="{Binding HorizontalAlignment, RelativeSource={RelativeSource AncestorType=ContentPresenter}, Mode=OneWayToSource}"/>
+                    <ToggleButton Content="C" Grid.Column="1" Width="20" />
+                    <ToggleButton Content="X" Grid.Column="2" Width="20" />
+                </Grid>
+            </Expander.Header>
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+                <StackPanel Grid.Column="1" FlowDirection="LeftToRight" Orientation="Horizontal" Margin="5,0,0,0">
+                    <ToggleButton Content="PS" Width="20" />
+                    <ToggleButton Content="PV" Width="20" />
+                    <Separator Width="1" Height="15" Style="{StaticResource {x:Static ToolBar.SeparatorStyleKey}}" Background="#FF3D3D3D" Margin="4,2,4,2" />
+                    <ToggleButton Content="ST" Width="20" />
+                    <Separator Width="1" Height="15" Style="{StaticResource {x:Static ToolBar.SeparatorStyleKey}}" Background="#FF3D3D3D" Margin="4,2,4,2" />
+                    <ToggleButton Content="EN" Width="20" />
+                    <ToggleButton Content="CS" Width="20" />
+                    <Separator Width="1" Height="15" Style="{StaticResource {x:Static ToolBar.SeparatorStyleKey}}" Background="#FF3D3D3D" Margin="4,2,4,2" />
+                    <ToggleButton Content="HI" Width="20" />
+                </StackPanel>
+                <TextBox Text="Replace with..."  BorderBrush="#FF3D3D3D" Background="#FF383838" Foreground="#FFD6D6D6" />
+            </Grid>
+        </Expander>
+
+    </Grid>
+</UserControl>
