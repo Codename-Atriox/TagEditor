@@ -25,7 +25,6 @@ namespace TagEditor.UI.Interfaces.Params
             parent_block = _parent_block;
             block_offset = _block_offset;
             int_type = _int_type;
-
             InitializeComponent();
             loadValue();
             Namebox.Text = name;
@@ -48,9 +47,9 @@ namespace TagEditor.UI.Interfaces.Params
         } // check 0b0100 for signed, then subtract it
 
         private void loadValue(){
-            switch ((sbyte)int_type){
+            switch ((sbyte)int_type){ // if we get errors about "too large or too small" then we aren't actually converting the values right
                 case 0: // byte
-                    sbyte value0 = Convert.ToSByte(parent_block[block_offset]);
+                    sbyte value0 = (sbyte)parent_block[block_offset];
                     Valuebox.Text = value0.ToString();
                     break;
                 case 1: // short
@@ -127,7 +126,7 @@ namespace TagEditor.UI.Interfaces.Params
             } catch { return false; }
         }
         private void assign_bytes(byte[] new_bytes){
-            for (int i = 0; i < new_bytes.Length; i++) parent_block[i+ block_offset] = new_bytes[i];
+            new_bytes.CopyTo(parent_block, block_offset);
         }
     }
 }

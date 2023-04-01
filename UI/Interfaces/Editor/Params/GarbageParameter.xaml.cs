@@ -53,7 +53,7 @@ namespace TagEditor.UI.Interfaces.Params
                 // for the purpose of triggering an error, else we'd convert straight into the array
                 byte[] bytes = new byte[length];
                 for (int i = 0; i < length; i++) bytes[i] = Convert.ToByte(hexstring.Substring(i * 2, 2), 16);
-                for (int i = 0; i < length; i++) parent_block[i + block_offset] = bytes[i];
+                bytes.CopyTo(parent_block, block_offset);
                 return true;
             } catch{ return false;}
         }

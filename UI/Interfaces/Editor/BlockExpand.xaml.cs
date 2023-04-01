@@ -10,19 +10,29 @@ using System.Windows.Documents;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
+using System.Windows.Media.Media3D;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
+using static TagEditor.UI.Windows.TagInstance;
 
-namespace TagEditor.UI.Interfaces.Params
+namespace TagEditor.UI.Interfaces.Editor
 {
     /// <summary>
-    /// Interaction logic for TestParam.xaml
+    /// Interaction logic for BlockExpand.xaml
     /// </summary>
-    public partial class TestParam : UserControl
+    public partial class BlockExpand : UserControl
     {
-        public TestParam()
+        public BlockExpand(expand_link _parent)
         {
             InitializeComponent();
+            parent = _parent;
         }
+        public expand_link parent;
+        private void Button_Click(object sender, RoutedEventArgs e)
+        {
+            parent.expand(false);
+
+        }
+        //=> parent.expand();
     }
 }

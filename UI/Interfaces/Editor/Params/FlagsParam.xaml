@@ -1,0 +1,28 @@
+﻿<UserControl x:Class="TagEditor.UI.Interfaces.Editor.Params.FlagsParam"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:local="clr-namespace:TagEditor.UI.Interfaces.Editor.Params"
+             mc:Ignorable="d" 
+             Height="18"
+             d:DesignHeight="18" d:DesignWidth="800">
+    <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="Auto"/>
+            <ColumnDefinition Width="Auto"/>
+            <ColumnDefinition Width="*"/>
+        </Grid.ColumnDefinitions>
+        <TextBlock x:Name="Namebox" Text="SampleParamName" Foreground="#FFD6D6D6" Margin="0,0,5,0" />
+        <Grid Grid.Column="1">
+            <Button x:Name="ValueBox" Content="SampleFlag1 SampleFlag2" Foreground="#FFEA5B5B" Click="Open_Dropdown"/>
+            <Popup x:Name="popup_thing" IsOpen="False" LostFocus="Popup_LostFocus" StaysOpen="True">
+                <ScrollViewer x:Name="box_thinger" BorderThickness="1" BorderBrush="#FF8A8A8A">
+                    <StackPanel x:Name="popup_panel" Background="#FF414141">
+
+                    </StackPanel>
+                </ScrollViewer>
+            </Popup>
+        </Grid>
+    </Grid>
+</UserControl>

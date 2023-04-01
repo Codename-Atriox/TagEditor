@@ -32,6 +32,8 @@ namespace TagEditor
         public MainWindow()
         {
             InitializeComponent();
+            StateChanged += MainWindowStateChangeRaised;
+
             Active_TagExplorer = new(this); explorer_socket.Children.Add(Active_TagExplorer);
             Active_TagViewer = new(this); tag_socket.Children.Add(Active_TagViewer);
 
@@ -47,6 +49,18 @@ namespace TagEditor
         private void CommandBinding_Executed_Maximize(object sender, ExecutedRoutedEventArgs e) { SystemCommands.MaximizeWindow(this); }
         private void CommandBinding_Executed_Restore(object sender, ExecutedRoutedEventArgs e) { SystemCommands.RestoreWindow(this); }
         private void CommandBinding_Executed_Close(object sender, ExecutedRoutedEventArgs e) { SystemCommands.CloseWindow(this); }
+
+        // State change
+        private void MainWindowStateChangeRaised(object? sender, EventArgs e){
+            if (WindowState == WindowState.Maximized){
+                main_grid.Margin = new Thickness(8);
+                RestoreButton.Visibility = Visibility.Visible;
+                MaximizeButton.Visibility = Visibility.Collapsed;
+            }else{
+                main_grid.Margin = new Thickness(0);
+                RestoreButton.Visibility = Visibility.Collapsed;
+                MaximizeButton.Visibility = Visibility.Visible;
+        }}
         #endregion
 
         private HexViewer Active_HexViewer;

@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Net.Mail;
 using System.Windows.Controls;
 using static Infinite_module_test.tag_structs;
 using static TagEditor.MainWindow;
@@ -34,9 +35,43 @@ namespace TagEditor.UI.Windows{
                     main.DisplayNote(tag_path + " failed to open", null, error_level.WARNING);
                     return;
             }}
+            // check to see if the name is a resource file name
+            if (tag_path.Contains("[")){
+                main.DisplayNote(tag_path + " appears to be a tag struct resource file, not a real tag", null, error_level.WARNING);
+                return;
+            }
             // error checking past, open tag for real
-            tag test = new tag();
-            if (!test.Load_tag_file(tag_path, plugins_path)){
+
+            // lets first get a list of all the resource file that this guy probably owns
+            var folder = Path.GetDirectoryName(tag_path);
+            string tag_file_name = Path.GetFileName(tag_path);
+            List<KeyValuePair<string, bool>> resource_list = new();
+            foreach (var item in Directory.GetFiles(folder)){
+                string file_name = Path.GetFileName(item);
+                if (file_name.StartsWith(tag_file_name) && file_name.Length > tag_file_name.Length){
+                    // get index of file, just incase the function that retrives all the files doesn't do it alphabetically
+                    // then either insert or add 
+                    int resource_index = Convert.ToInt32(file_name.Substring(tag_file_name.Length+1).Split("-")[0]);
+
+                    using (FileStream fs = new FileStream(item, FileMode.Open)){
+                        try{byte[] bytes = new byte[4];
+                            fs.Read(bytes, 0, 4);
+                            bool is_standalone_resource = bytes.SequenceEqual(new byte[] { 0x75, 0x63, 0x73, 0x68 });
+                            if (resource_index >= resource_list.Count) resource_list.Add(new KeyValuePair<string, bool>(item, is_standalone_resource));
+                            else resource_list.Insert(resource_index, new KeyValuePair<string, bool>(item, is_standalone_resource));
+                        }catch{ main.DisplayNote("resource file: \"" + item + "\" is unable to be opened, disregarding", null, error_level.WARNING);}
+            }}}
+
+            // anomaly check // make sure all entries are of either type, else this will become very difficult to manage
+            bool inital = resource_list[0].Value;
+            foreach (var item in resource_list){
+                if (item.Value != inital){
+                    main.DisplayNote(item + " does not have a matching chunked/non-chunked status, please submit this scenario to the C:A developers", null, error_level.WARNING);
+            }}
+
+
+            tag test = new tag(plugins_path, resource_list);
+            if (!test.Load_tag_file(tag_path)){
                 main.DisplayNote(tag_path + " was not able to be loaded as a tag", null, error_level.WARNING);
                 return;
             }

@@ -1,4 +1,4 @@
-﻿<UserControl x:Class="TagEditor.UI.Windows.TagInstance"
+﻿<UserControl xmlns:Params="clr-namespace:TagEditor.UI.Interfaces.Params"  x:Class="TagEditor.UI.Windows.TagInstance"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
@@ -9,36 +9,28 @@
 
     <Grid>
         <ScrollViewer>
-            <Grid>
+            <Grid x:Name="editor_container" MouseLeftButtonDown="Grid_MouseLeftButtonDown" Background="Transparent">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="50"/>
+                    <ColumnDefinition Width="90"/>
                     <ColumnDefinition Width="*"/>
                 </Grid.ColumnDefinitions>
-                <StackPanel x:Name="indexes_panel" Margin="0,0,20,0">
-                    <TextBlock Text="1" HorizontalAlignment="Right" Foreground="#FF8E8E8E"/>
-                    <TextBlock Text="2" HorizontalAlignment="Right" Foreground="#FF8E8E8E"/>
-                    <TextBlock Text="3" HorizontalAlignment="Right" Foreground="#FF8E8E8E"/>
-                    <TextBlock Text="4" HorizontalAlignment="Right" Foreground="#FF8E8E8E"/>
-                    <TextBlock Text="5" HorizontalAlignment="Right" Foreground="#FF8E8E8E"/>
-                    <TextBlock Text="6" HorizontalAlignment="Right" Foreground="#FF8E8E8E"/>
-                    <TextBlock Text="7" HorizontalAlignment="Right" Foreground="#FF8E8E8E"/>
-                    <TextBlock Text="8" HorizontalAlignment="Right" Foreground="#FF8E8E8E"/>
-                    <TextBlock Text="9" HorizontalAlignment="Right" Foreground="#FF8E8E8E"/>
-                    <TextBlock Text="10" HorizontalAlignment="Right" Foreground="#FF8E8E8E"/>
-                    <TextBlock Text="11" HorizontalAlignment="Right" Foreground="#FF8E8E8E"/>
-                    <TextBlock Text="12" HorizontalAlignment="Right" Foreground="#FF8E8E8E"/>
-                </StackPanel>
-                <GridSplitter Width="1" />
-                <StackPanel x:Name="params_panel" Grid.Column="1" Margin="10,0,0,0" >
-                    <StackPanel Orientation="Horizontal" >
-                        <TextBlock Text="D:\tags\test\" Foreground="#FF8E8E8E" />
-                        <TextBlock Text="example_tag_name.atag" Foreground="#FFD6D6D6"/>
-                    </StackPanel>
+                <ItemsControl ItemTemplate="{DynamicResource test_item_template}" x:Name="indexes_panel" Margin="0,0,10,0" Background="{x:Null}" BorderBrush="{x:Null}" Foreground="#FF6D6D6D"/>
+                <GridSplitter Width="1" Background="#FFB1B1B1" />
 
+                <ItemsControl ItemTemplate="{DynamicResource test_item_template2}" x:Name="types_panel" Margin="10,0,5,0" Grid.Column="1" Background="{x:Null}" BorderBrush="{x:Null}" Foreground="#FF3AAAE6" />
+                <GridSplitter Width="1" Grid.Column="1" Background="#20808080" />
+
+                <Border x:Name="selec_border" BorderBrush="#FF525252" BorderThickness="1" Height="18" Grid.ColumnSpan="3" VerticalAlignment="Top" Visibility="Collapsed"/>
+                
+                <Canvas x:Name="expanders_panel" Grid.Column="1" RenderTransformOrigin="0.5,0.0" Margin="-7.5,0,0,0">
+                    
+                </Canvas>
+                <StackPanel x:Name="params_panel" Grid.Column="2" Margin="5,0,0,0" >
                 </StackPanel>
             </Grid>
         </ScrollViewer>
-        
+
 
         <Expander Grid.Column="1" Background="#FF383838" Width="350" MinHeight="25" Height="20" MaxHeight="45" HorizontalAlignment="Right" VerticalAlignment="Top" Margin="0,0,20,0">
             <Expander.Header >

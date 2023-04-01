@@ -1,21 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
-using System.Security.Policy;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
 using System.Windows.Forms;
 using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Navigation;
-using System.Windows.Shapes;
-using System.Xml.Linq;
 
 namespace TagEditor.UI.Windows{
     public partial class TagExplorer : System.Windows.Controls.UserControl{
@@ -60,8 +49,7 @@ namespace TagEditor.UI.Windows{
             item.Items.Add("Loading...");
             return item;
         }
-        private TreeViewItem CreateTreeDir(DirectoryInfo o)
-        {
+        private TreeViewItem CreateTreeDir(DirectoryInfo o){
             TreeViewItem item = new TreeViewItem();
             item.Header = o.Name;
             item.Tag = o;
@@ -119,8 +107,7 @@ namespace TagEditor.UI.Windows{
                 if (!item.IsExpanded && (SearchAll.IsChecked == false)) goto END; // nothing more to check
                 if (item.Items.Count == 0) goto END; // no children to check
                 if (item.Items[0] != "Loading..."){ // if the children are already loaded
-                    if (!SearchMatches(item.Items)) 
-                        goto END;
+                    if (!SearchMatches(item.Items)) goto END;
                     had_match = true;
                     item.IsExpanded = true; 
                 }else{ // if the children are not loaded, load them
@@ -137,9 +124,7 @@ namespace TagEditor.UI.Windows{
             else if (FilenameMatches(name)){ // can't use goto false, cause thats reserved for folders
                 item.Visibility = Visibility.Visible;
                 return true;
-            }
-            else
-            {
+            }else{
                 item.Visibility = Visibility.Collapsed;
                 return false;
             }
@@ -209,8 +194,7 @@ namespace TagEditor.UI.Windows{
         }}}
         private bool name_matches(string name) => name?.IndexOf(SearchBox.Text, (CaseSensitve.IsChecked == true) ? StringComparison.Ordinal : StringComparison.OrdinalIgnoreCase) >= 0;
 
-        private void Button_ClearSearch(object sender, RoutedEventArgs e)
-        {
+        private void Button_ClearSearch(object sender, RoutedEventArgs e){
             SearchBox.Text = "";
         }
 
