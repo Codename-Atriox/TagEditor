@@ -24,9 +24,14 @@
                 <TextBlock Text="..." Margin="2,0,2,0" Foreground="gray"/>
             </Border>
         </Grid>
-        
-        <StackPanel x:Name="params_panel" Grid.Row="1" Margin="15,0,0,0">
-        </StackPanel>
-        <Separator Grid.Row="1" Style="{StaticResource {x:Static ToolBar.SeparatorStyleKey}}" Width="1" HorizontalAlignment="Left" Margin="0,0,0,0" Background="#775F5F5F" MinHeight="0"/>
+
+        <Grid Grid.Row="1">
+            <StackPanel x:Name="params_panel" Margin="15,0,0,0">
+            </StackPanel>
+            <!--Separator Grid.Row="1" Style="{StaticResource {x:Static ToolBar.SeparatorStyleKey}}" Width="1" HorizontalAlignment="Left" Margin="0,0,0,0" Background="#775F5F5F" MinHeight="0"/-->
+            <Canvas HorizontalAlignment="Left" ClipToBounds="True" Margin="1,0,0,0" Width="1">
+                <Line Stroke="#FFABABAB" StrokeDashArray="3.5 2.5" Y2="{Binding ActualHeight, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=Grid}}"/>
+            </Canvas>
+        </Grid>
     </Grid>
 </UserControl>

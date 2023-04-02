@@ -6,7 +6,7 @@
         xmlns:local="clr-namespace:TagEditor"
         mc:Ignorable="d"
         WindowStyle="None"
-        Title="MainWindow" Height="450" Width="800" Background="#FF1F1F1F" FontFamily="Cascadia Code">
+        Title="MainWindow" Height="850" Width="1400" Background="#FF1F1F1F" FontFamily="Cascadia Code">
 
     <!--Add the WindowChrome object-->
     <WindowChrome.WindowChrome>
@@ -20,7 +20,8 @@
         <CommandBinding Command="{x:Static SystemCommands.MinimizeWindowCommand}" CanExecute="CommandBinding_CanExecute" Executed="CommandBinding_Executed_Minimize" />
         <CommandBinding Command="{x:Static SystemCommands.RestoreWindowCommand}" CanExecute="CommandBinding_CanExecute" Executed="CommandBinding_Executed_Restore" />
     </Window.CommandBindings>
- 
+    <Border BorderBrush="#FF7160E8" BorderThickness="1">
+        
     <Grid x:Name="main_grid">
         <Grid.RowDefinitions>
             <RowDefinition Height="30"/>
@@ -100,5 +101,6 @@
         <Grid x:Name="DebugPanel" Grid.Row="3" Background="#FF424242" MouseDown="DebugPanel_MouseDown">
             <TextBlock x:Name="DebugText" Text="Running..." VerticalAlignment="Center" Margin="5,0,0,0" Foreground="#FFD6D6D6" />
         </Grid>
-    </Grid>
+        </Grid>
+    </Border>
 </Window>

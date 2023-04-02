@@ -489,7 +489,12 @@ namespace TagEditor.UI.Windows{
                             theoretical_line += struct_link.total_contained_lines;
                         }continue;
                     case 0x39:{ // _field_array
+                            string next_guid = node.Attributes?["GUID"]?.Value;
+                            int array_length = Convert.ToInt32(node.Attributes?["Count"]?.Value);
                             expand_link struct_link = expandus_linkus.child_links[i];
+                            ArrayParam param = new(param_name, _struct, offset, next_guid, struct_link, array_length);
+                            container.Children.Add(param);
+                            setup_struct_element(struct_link, param, current_line);
                             theoretical_line += struct_link.total_contained_lines;
                         }continue;
                     case 0x3A: // 
