@@ -46,6 +46,7 @@ namespace TagEditor.UI.Windows{
             var folder = Path.GetDirectoryName(tag_path);
             string tag_file_name = Path.GetFileName(tag_path);
             List<KeyValuePair<string, bool>> resource_list = new();
+            /*
             foreach (var item in Directory.GetFiles(folder)){
                 string file_name = Path.GetFileName(item);
                 if (file_name.StartsWith(tag_file_name) && file_name.Length > tag_file_name.Length){
@@ -61,13 +62,13 @@ namespace TagEditor.UI.Windows{
                             else resource_list.Insert(resource_index, new KeyValuePair<string, bool>(item, is_standalone_resource));
                         }catch{ main.DisplayNote("resource file: \"" + item + "\" is unable to be opened, disregarding", null, error_level.WARNING);}
             }}}
-
             // anomaly check // make sure all entries are of either type, else this will become very difficult to manage
             bool inital = resource_list[0].Value;
             foreach (var item in resource_list){
                 if (item.Value != inital){
                     main.DisplayNote(item + " does not have a matching chunked/non-chunked status, please submit this scenario to the C:A developers", null, error_level.WARNING);
             }}
+            */
 
 
             tag test = new tag(plugins_path, resource_list);
