@@ -46,13 +46,15 @@ namespace TagEditor.UI.Windows{
             var folder = Path.GetDirectoryName(tag_path);
             string tag_file_name = Path.GetFileName(tag_path);
             List<KeyValuePair<string, bool>> resource_list = new();
-            /*
+            
             foreach (var item in Directory.GetFiles(folder)){
                 string file_name = Path.GetFileName(item);
-                if (file_name.StartsWith(tag_file_name) && file_name.Length > tag_file_name.Length){
+                if (file_name.Length > tag_file_name.Length+4 && file_name.StartsWith(tag_file_name)){
                     // get index of file, just incase the function that retrives all the files doesn't do it alphabetically
                     // then either insert or add 
-                    int resource_index = Convert.ToInt32(file_name.Substring(tag_file_name.Length+1).Split("-")[0]);
+
+                    string resource_number = file_name.Substring(tag_file_name.Length + 5);
+                    int resource_index = Convert.ToInt32(resource_number);
 
                     using (FileStream fs = new FileStream(item, FileMode.Open)){
                         try{byte[] bytes = new byte[4];
@@ -63,12 +65,13 @@ namespace TagEditor.UI.Windows{
                         }catch{ main.DisplayNote("resource file: \"" + item + "\" is unable to be opened, disregarding", null, error_level.WARNING);}
             }}}
             // anomaly check // make sure all entries are of either type, else this will become very difficult to manage
-            bool inital = resource_list[0].Value;
-            foreach (var item in resource_list){
-                if (item.Value != inital){
-                    main.DisplayNote(item + " does not have a matching chunked/non-chunked status, please submit this scenario to the C:A developers", null, error_level.WARNING);
-            }}
-            */
+            if (resource_list.Count > 0){
+                bool inital = resource_list[0].Value;
+                foreach (var item in resource_list){
+                    if (item.Value != inital){
+                        main.DisplayNote(item + " does not have a matching chunked/non-chunked status, please submit this scenario to the C:A developers", null, error_level.WARNING);
+            }}}
+            
 
 
             tag test = new tag(plugins_path, resource_list);
