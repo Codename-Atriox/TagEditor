@@ -2,6 +2,7 @@
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
+using System.Xml.Linq;
 using static Infinite_module_test.tag_structs;
 using static Infinite_module_test.tag_structs.tag;
 using static TagEditor.UI.Windows.TagInstance;
@@ -24,6 +25,16 @@ namespace TagEditor.UI.Interfaces.Editor.Params
             // for the annoying vtable struct that has no name for no reason in particular
             Namebox.Text = name + " [" + _tag_data.blocks.Count + "]";
             parent = _parent;
+        }
+        public void reload(string name, tagdata_struct _tag_data){
+            tag_data = _tag_data;
+
+            // for the annoying vtable struct that has no name for no reason in particular
+            Namebox.Text = name + " [" + _tag_data.blocks.Count + "]";
+
+            // reset selection
+            selected_index = 0;
+            indexbox.Text = selected_index.ToString();
         }
         public tagdata_struct tag_data;
 

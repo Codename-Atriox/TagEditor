@@ -119,34 +119,32 @@ namespace TagEditor.UI.Windows{
             public void expand(bool reload){ // this function is directly called by the expand button control, opposed to the struct UI element, thats why this even exists, so those two can be entirely unrelated
                 if (!is_on_screen) Debug.Assert(false, "bad. this element is not visible and is attempting to expand");
 
-                if (is_opened && reload) expand(false); // to close it so we can reopne it
+                // if (is_opened && reload) expand(false); // to close it so we can reopne it
                 // we need to figure out what our struct type is
                 // struct
                 // array 
                 // tagblock
                 // resource block
-                if (is_opened){
+
+                // CLOSE OPENED TAG
+                if (is_opened && !reload){ // if open & not reloading
                     wipe_child();
-                    if (struct_UI_element is StructParam)
-                    {
+                    if (struct_UI_element is StructParam){
                         StructParam test = struct_UI_element as StructParam;
                         test.params_panel.Children.Clear();
                         test.expand_indicator.Visibility = Visibility.Visible;
-                    }
-                    else if (struct_UI_element is ArrayParam)
-                    {
+
+                    }else if (struct_UI_element is ArrayParam){
                         ArrayParam test = struct_UI_element as ArrayParam;
                         test.params_panel.Children.Clear();
                         test.expand_indicator.Visibility = Visibility.Visible;
-                    }
-                    else if (struct_UI_element is TagblockParam)
-                    {
+
+                    }else if (struct_UI_element is TagblockParam){
                         TagblockParam test = struct_UI_element as TagblockParam;
                         test.params_panel.Children.Clear();
                         test.expand_indicator.Visibility = Visibility.Visible;
-                    }
-                    else if(struct_UI_element is ResourceParam)
-                    {
+
+                    }else if(struct_UI_element is ResourceParam){
                         ResourceParam test = struct_UI_element as ResourceParam;
                         test.params_panel.Children.Clear();
                         test.expand_indicator.Visibility = Visibility.Visible;
@@ -155,33 +153,63 @@ namespace TagEditor.UI.Windows{
                     expand_button.visual.Text = "+";
                     is_opened = false;
                     send_info_to.lines_altered(literal_line_index+1, -child_line_count);
-                }else{
+                // RELOAD OPEN TAG
+                } else if (is_opened){ // if is open & we're reloading // reload the tag if reload is checked and reload is marked
+                    if (struct_UI_element == null) Debug.Assert(false, "bad. no binded control");
+                    if (struct_UI_element is TagblockParam && (struct_UI_element as TagblockParam).tag_data.blocks.Count == 0){
+                        // if this tag is : 1. open & 2. no longer openable. // then we have to close this
+                        expand(false); // close tag
+                        return;
+                    }
+
+                    //expand_button.visual.Text = "-";
+                    //is_opened = true;
+
+                    if (struct_UI_element is StructParam){
+                        StructParam test = struct_UI_element as StructParam;
+                        test.expand_indicator.Visibility = Visibility.Collapsed;
+                        send_info_to.Expand_struct(test.tag_data, test.guid, test.params_panel, test.struct_offset, this);
+
+                    }else if (struct_UI_element is ArrayParam){
+                        ArrayParam test = struct_UI_element as ArrayParam;
+                        test.expand_indicator.Visibility = Visibility.Collapsed;
+                        send_info_to.Expand_struct(test.tag_data, test.guid, test.params_panel, test.struct_offset + (test.struct_size * test.selected_index), this);
+
+                    }else if (struct_UI_element is TagblockParam){
+                        TagblockParam test = struct_UI_element as TagblockParam;
+                        test.expand_indicator.Visibility = Visibility.Collapsed;
+                        send_info_to.Expand_struct(test.tag_data.blocks[test.selected_index], test.tag_data.GUID, test.params_panel, 0, this);
+
+                    }else if(struct_UI_element is ResourceParam){
+                        ResourceParam test = struct_UI_element as ResourceParam;
+                        test.expand_indicator.Visibility = Visibility.Collapsed;
+                        send_info_to.Expand_struct(test.tag_data.blocks[0], test.tag_data.GUID, test.params_panel, 0, this);
+                    }
+                // OPEN CLOSED TAG
+                } else{ // is closed // open the tag as normal, generate new UI
                     if (struct_UI_element == null) Debug.Assert(false, "bad. no binded control");
                     if (struct_UI_element is TagblockParam && (struct_UI_element as TagblockParam).tag_data.blocks.Count == 0) return; // failed because tagblock not openable
 
                     expand_button.visual.Text = "-";
                     is_opened = true;
+
                     send_info_to.lines_altered(literal_line_index + 1, child_line_count);
-                    if (struct_UI_element is StructParam)
-                    {
+                    if (struct_UI_element is StructParam){
                         StructParam test = struct_UI_element as StructParam;
                         test.expand_indicator.Visibility = Visibility.Collapsed;
                         send_info_to.Expand_struct(test.tag_data, test.guid, test.params_panel, test.struct_offset, this);
-                    }
-                    else if (struct_UI_element is ArrayParam)
-                    {
+
+                    }else if (struct_UI_element is ArrayParam){
                         ArrayParam test = struct_UI_element as ArrayParam;
                         test.expand_indicator.Visibility = Visibility.Collapsed;
-                        send_info_to.Expand_struct(test.tag_data, test.guid, test.params_panel, test.struct_offset, this);
-                    }
-                    else if (struct_UI_element is TagblockParam)
-                    {
+                        send_info_to.Expand_struct(test.tag_data, test.guid, test.params_panel, test.struct_offset + (test.struct_size * test.selected_index), this);
+
+                    }else if (struct_UI_element is TagblockParam){
                         TagblockParam test = struct_UI_element as TagblockParam;
                         test.expand_indicator.Visibility = Visibility.Collapsed;
                         send_info_to.Expand_struct(test.tag_data.blocks[test.selected_index], test.tag_data.GUID, test.params_panel, 0, this);
-                    }
-                    else if(struct_UI_element is ResourceParam)
-                    {
+
+                    }else if(struct_UI_element is ResourceParam){
                         ResourceParam test = struct_UI_element as ResourceParam;
                         test.expand_indicator.Visibility = Visibility.Collapsed;
                         send_info_to.Expand_struct(test.tag_data.blocks[0], test.tag_data.GUID, test.params_panel, 0, this);
@@ -245,7 +273,7 @@ namespace TagEditor.UI.Windows{
         ObservableCollection<string> line_groups = new();
         public void Expand_struct(tag.thing _struct, string struct_guid, StackPanel container, int struct_offset, expand_link expandus_linkus){
 
-            container.Children.Clear(); // knock out any previous elements here, although it would be more efficient to reuse them
+            // container.Children.Clear(); // knock out any previous elements here, although it would be more efficient to reuse them
             XmlNode? guid_test = loaded_tag.reference_root.SelectSingleNode('_' + struct_guid);
             if (guid_test == null) Debug.Assert(false, "failed to locate guid xml node?");
 
@@ -269,284 +297,519 @@ namespace TagEditor.UI.Windows{
                 current_line++;
                 theoretical_line++;
                 int type = Convert.ToInt32(node.Name.Substring(1), 16);
-                if (line_groups.Count < current_line) line_groups.Add(group_names[type]);
-                else line_groups.Insert(current_line, group_names[type]);
 
-                // shouldn't be separate, but whatever for now
-                // figure out what index this guy should actually be at
-                if (line_indexes.Count < current_line) line_indexes.Add(theoretical_line.ToString());
-                else line_indexes.Insert(current_line, theoretical_line.ToString());
+                // determine whether the item already exists or not
+                UIElement? bobject = null;
+                if (container.Children.Count > i)
+                    bobject = container.Children[i];
 
-                switch (type){
-                    case 0x0:{ // _field_string
-                            StringParam pad_garb_val = new(param_name, _struct.tag_data, offset, 32);
-                            container.Children.Add(pad_garb_val);
-                        }continue;  
-                    case 0x1:{ // _field_long_string
-                            StringParam pad_garb_val = new(param_name, _struct.tag_data, offset, 256);
-                            container.Children.Add(pad_garb_val);
-                        }continue; 
-                    case 0x2:{ // _field_string_id
-                            HashParam pad_garb_val = new(param_name, _struct.tag_data, offset);
-                            container.Children.Add(pad_garb_val);
-                        }continue;
-                    case 0x3: //
-                        break;  
-                    case 0x4:{ // _field_char_integer
-                            IntegerParam new_val = new(param_name, _struct.tag_data, offset, IntegerParam.IntType.signed_char);
-                            container.Children.Add(new_val);
-                        }continue;  
-                    case 0x5:{ // _field_short_integer
-                            IntegerParam new_val = new(param_name, _struct.tag_data, offset, IntegerParam.IntType.signed_short);
-                            container.Children.Add(new_val);
-                        }continue;  
-                    case 0x6:{ // _field_long_integer
-                            IntegerParam new_val = new(param_name, _struct.tag_data, offset, IntegerParam.IntType.signed_int);
-                            container.Children.Add(new_val);
-                        }continue;  
-                    case 0x7:{ // _field_int64_integer
-                            IntegerParam new_val = new(param_name, _struct.tag_data, offset, IntegerParam.IntType.signed_long);
-                            container.Children.Add(new_val);
-                        }continue;  
-                    case 0x8:{ // _field_angle
-                            AngleParam new_val = new(param_name, _struct.tag_data, offset);
-                            container.Children.Add(new_val);
-                        }continue;
-                    case  0x9: // _field_tag
-                        break;  
-                    case  0xA:{ // _field_char_enum
-                            string[] enum_names = new string[node.ChildNodes.Count];
-                            for (int i2 = 0; i2 < enum_names.Length; i2++)
-                                enum_names[i2] = node.ChildNodes[i2].Attributes?["n"]?.Value;
-                            EnumParam new_val = new(param_name, _struct.tag_data, offset, EnumParam.EnumType._byte, enum_names);
-                            container.Children.Add(new_val);
-                        }continue;
-                    case  0xB:{ // _field_short_enum
-                            string[] enum_names = new string[node.ChildNodes.Count];
-                            for (int i2 = 0; i2 < enum_names.Length; i2++)
-                                enum_names[i2] = node.ChildNodes[i2].Attributes?["n"]?.Value;
-                            EnumParam new_val = new(param_name, _struct.tag_data, offset, EnumParam.EnumType._short, enum_names);
-                            container.Children.Add(new_val);
-                        }continue;
-                    case  0xC:{ // _field_long_enum
-                            string[] enum_names = new string[node.ChildNodes.Count];
-                            for (int i2 = 0; i2 < enum_names.Length; i2++)
-                                enum_names[i2] = node.ChildNodes[i2].Attributes?["n"]?.Value;
-                            EnumParam new_val = new(param_name, _struct.tag_data, offset, EnumParam.EnumType._int, enum_names);
-                            container.Children.Add(new_val);
-                        }continue;
-                    case  0xD:{ // _field_long_flags
-                            string[] flag_names = new string[32];
-                            for (int i2 = 0; i2 < flag_names.Length; i2++){
-                                if (node.ChildNodes.Count > i2) flag_names[i2] = node.ChildNodes[i2].Attributes?["n"]?.Value;
-                                else flag_names[i2] = "Flag" + i2;
-                            }
-                            FlagsParam new_val = new(param_name, _struct.tag_data, offset, FlagsParam.FlagType._int, flag_names);
-                            container.Children.Add(new_val);
-                        }continue;
-                    case  0xE:{ // _field_word_flags
-                            string[] flag_names = new string[16];
-                            for (int i2 = 0; i2 < flag_names.Length; i2++){
-                                if (node.ChildNodes.Count > i2) flag_names[i2] = node.ChildNodes[i2].Attributes?["n"]?.Value;
-                                else flag_names[i2] = "Flag" + i2;
-                            }
-                            FlagsParam new_val = new(param_name, _struct.tag_data, offset, FlagsParam.FlagType._short, flag_names);
-                            container.Children.Add(new_val);
-                        }continue;
-                    case  0xF:{ // _field_byte_flags
-                            string[] flag_names = new string[8];
-                            for (int i2 = 0; i2 < flag_names.Length; i2++){
-                                if (node.ChildNodes.Count > i2) flag_names[i2] = node.ChildNodes[i2].Attributes?["n"]?.Value;
-                                else flag_names[i2] = "Flag" + i2;
-                            }
-                            FlagsParam new_val = new(param_name, _struct.tag_data, offset, FlagsParam.FlagType._byte, flag_names);
-                            container.Children.Add(new_val);
-                        }continue;
-                    case 0x10:{ // _field_point_2d
-                            DoubleshortParam new_val = new(param_name, _struct.tag_data, offset);
-                            container.Children.Add(new_val);
-                        }continue;
-                    case 0x11:{ // _field_rectangle_2d
-                            DoubleshortParam new_val = new(param_name, _struct.tag_data, offset);
-                            container.Children.Add(new_val);
-                        }continue;
-                    case 0x12: // _field_rgb_color
-                        break;  
-                    case 0x13: // _field_argb_color 
-                        break;   
-                    case 0x14:{ // _field_real
-                            FloatParam new_val = new(param_name, _struct.tag_data, offset, false);
-                            container.Children.Add(new_val);
-                        }continue;  
-                    case 0x15:{ // _field_real_fraction
-                            FloatParam new_val = new(param_name, _struct.tag_data, offset, true);
-                            container.Children.Add(new_val);
-                        }continue;  
-                    case 0x16:{ // _field_real_point_2d
-                            DoublefloatParam new_val = new(param_name, _struct.tag_data, offset, false);
-                            container.Children.Add(new_val);
-                        }continue;
-                    case 0x17:{ // _field_real_point_3d
-                            TriplefloatParam new_val = new(param_name, _struct.tag_data, offset);
-                            container.Children.Add(new_val);
-                        }continue;
-                    case 0x18:{ // _field_real_vector_2d
-                            DoublefloatParam new_val = new(param_name, _struct.tag_data, offset, false);
-                            container.Children.Add(new_val);
-                        }continue;
-                    case 0x19:{ // _field_real_vector_3d
-                            TriplefloatParam new_val = new(param_name, _struct.tag_data, offset);
-                            container.Children.Add(new_val);
-                        }continue;
-                    case 0x1A:  // _field_real_quaternion
-                        break; 
-                    case 0x1B:{ // _field_real_euler_angles_2d
-                            DoublefloatParam new_val = new(param_name, _struct.tag_data, offset, false);
-                            container.Children.Add(new_val);
-                        }continue;
-                    case 0x1C:{ // _field_real_euler_angles_3d
-                            TriplefloatParam new_val = new(param_name, _struct.tag_data, offset);
-                            container.Children.Add(new_val);
-                        }continue;
-                    case 0x1D: // _field_real_plane_2d
-                        break;  
-                    case 0x1E: // _field_real_plane_3d
-                        break;  
-                    case 0x1F: // _field_real_rgb_color
-                        break;  
-                    case 0x20: // _field_real_argb_color
-                        break;  
-                    case 0x21: // _field_real_hsv_color
-                        break;  
-                    case 0x22: // _field_real_ahsv_color
-                        break;  
-                    case 0x23:{ // _field_short_bounds
-                            DoubleshortParam new_val = new(param_name, _struct.tag_data, offset);
-                            container.Children.Add(new_val);
-                        }continue;
-                    case 0x24:{ // _field_angle_bounds
-                            DoubleangleParam new_val = new(param_name, _struct.tag_data, offset);
-                            container.Children.Add(new_val);
-                        }continue;
-                    case 0x25:{ // _field_real_bounds
-                            DoublefloatParam new_val = new(param_name, _struct.tag_data, offset, false);
-                            container.Children.Add(new_val);
-                        }continue;
-                    case 0x26:{ // _field_real_fraction_bounds
-                            DoublefloatParam new_val = new(param_name, _struct.tag_data, offset, true);
-                            container.Children.Add(new_val);
-                        }continue;
-                    case 0x27: //
-                        break;
-                    case 0x28: //
-                        break;
-                    case 0x29: // _field_long_block_flags
-                        break;
-                    case 0x2A: // _field_word_block_flags
-                        break;
-                    case 0x2B: // _field_byte_block_flags
-                        break;
-                    case 0x2C: // _field_char_block_index
-                        break;
-                    case 0x2D: // _field_custom_char_block_index
-                        break;
-                    case 0x2E: // _field_short_block_index
-                        break;
-                    case 0x2F: // _field_custom_short_block_index
-                        break;
-                    case 0x30: // _field_long_block_index
-                        break;
-                    case 0x31: // _field_custom_long_block_index
-                        break;
-                    case 0x32: // 
-                        break;
-                    case 0x33: // 
-                        break;
-                    case 0x34: case 0x35:{ // _field_skip // _field_pad
-                            short size = Convert.ToInt16(node.Attributes?["Length"]?.Value);
-                            GarbageParameter pad_garb_val = new(param_name, _struct.tag_data, offset, size);
-                            container.Children.Add(pad_garb_val);
-                        }continue;
-                    case 0x36:{ // _field_explanation
-                            CommentParam new_val = new("// "+param_name);
-                            container.Children.Add(new_val);
-                        }continue;
-                    case 0x37:{ // _field_custom
-                            // min max values for those few istances in the levl
-                            string? min = node.Attributes?["Min"]?.Value;
-                            string? max = node.Attributes?["Max"]?.Value;
-                            if (min != null) param_name += " min: " + min;
-                            if (max != null) param_name += " max: " + max;
-                            CommentParam new_val = new("// "+param_name);
-                            container.Children.Add(new_val);
-                        }continue;
-                    case 0x38:{ // _field_struct 
-                            string next_guid = node.Attributes?["GUID"]?.Value;
-                            expand_link struct_link = expandus_linkus.child_links[i];
-                            StructParam param = new(param_name, _struct, offset, next_guid, struct_link);
-                            container.Children.Add(param);
-                            setup_struct_element(struct_link, param, current_line);
-                            theoretical_line += struct_link.total_contained_lines;
-                        }continue;
-                    case 0x39:{ // _field_array
-                            string next_guid = node.Attributes?["GUID"]?.Value;
-                            int array_length = Convert.ToInt32(node.Attributes?["Count"]?.Value);
-                            expand_link struct_link = expandus_linkus.child_links[i];
-                            ArrayParam param = new(param_name, _struct, offset, next_guid, struct_link, array_length);
-                            container.Children.Add(param);
-                            setup_struct_element(struct_link, param, current_line);
-                            theoretical_line += struct_link.total_contained_lines;
-                        }continue;
-                    case 0x3A: // 
-                        break;
-                    case 0x3B: // end of struct
-                        break;
-                    case 0x3C:{ // _field_byte_integer
-                            IntegerParam new_val = new(param_name, _struct.tag_data, offset, IntegerParam.IntType.unsigned_char);
-                            container.Children.Add(new_val);
-                        }continue;
-                    case 0x3D:{ // _field_word_integer
-                            IntegerParam new_val = new(param_name, _struct.tag_data, offset, IntegerParam.IntType.unsigned_short);
-                            container.Children.Add(new_val);
-                        }continue;
-                    case 0x3E:{ // _field_dword_integer
-                            IntegerParam new_val = new(param_name, _struct.tag_data, offset, IntegerParam.IntType.unsigned_int);
-                            container.Children.Add(new_val);
-                        }continue;
-                    case 0x3F:{ // _field_qword_integer
-                            IntegerParam new_val = new(param_name, _struct.tag_data, offset, IntegerParam.IntType.unsigned_long);
-                            container.Children.Add(new_val);
-                        }continue;
-                    case 0x40:{ // _field_block_v2
-                            if (!_struct.tag_block_refs.ContainsKey((ulong)offset)) 
-                                break;
+                // only update lines information if this line does not already exist
+                if (bobject == null){
+                    if (line_groups.Count < current_line) line_groups.Add(group_names[type]);
+                    else line_groups.Insert(current_line, group_names[type]);
+                    // shouldn't be separate, but whatever for now
+                    // figure out what index this guy should actually be at
+                    if (line_indexes.Count < current_line) line_indexes.Add(theoretical_line.ToString());
+                    else line_indexes.Insert(current_line, theoretical_line.ToString());
+                    
+                    // /////////////////////// //
+                    // CREATE NEW CHILD PARAM //
+                    // ///////////////////// //
+                    switch (type){
+                        case 0x0:{ // _field_string
+                                StringParam pad_garb_val = new(param_name, _struct.tag_data, offset, 32);
+                                container.Children.Add(pad_garb_val);
+                            }continue;  
+                        case 0x1:{ // _field_long_string
+                                StringParam pad_garb_val = new(param_name, _struct.tag_data, offset, 256);
+                                container.Children.Add(pad_garb_val);
+                            }continue; 
+                        case 0x2:{ // _field_string_id
+                                HashParam pad_garb_val = new(param_name, _struct.tag_data, offset);
+                                container.Children.Add(pad_garb_val);
+                            }continue;
+                        case 0x3: //
+                            break;  
+                        case 0x4:{ // _field_char_integer
+                                IntegerParam new_val = new(param_name, _struct.tag_data, offset, IntegerParam.IntType.signed_char);
+                                container.Children.Add(new_val);
+                            }continue;  
+                        case 0x5:{ // _field_short_integer
+                                IntegerParam new_val = new(param_name, _struct.tag_data, offset, IntegerParam.IntType.signed_short);
+                                container.Children.Add(new_val);
+                            }continue;  
+                        case 0x6:{ // _field_long_integer
+                                IntegerParam new_val = new(param_name, _struct.tag_data, offset, IntegerParam.IntType.signed_int);
+                                container.Children.Add(new_val);
+                            }continue;  
+                        case 0x7:{ // _field_int64_integer
+                                IntegerParam new_val = new(param_name, _struct.tag_data, offset, IntegerParam.IntType.signed_long);
+                                container.Children.Add(new_val);
+                            }continue;  
+                        case 0x8:{ // _field_angle
+                                AngleParam new_val = new(param_name, _struct.tag_data, offset);
+                                container.Children.Add(new_val);
+                            }continue;
+                        case  0x9: // _field_tag
+                            break;  
+                        case  0xA:{ // _field_char_enum
+                                string[] enum_names = new string[node.ChildNodes.Count];
+                                for (int i2 = 0; i2 < enum_names.Length; i2++)
+                                    enum_names[i2] = node.ChildNodes[i2].Attributes?["n"]?.Value;
+                                EnumParam new_val = new(param_name, _struct.tag_data, offset, EnumParam.EnumType._byte, enum_names);
+                                container.Children.Add(new_val);
+                            }continue;
+                        case  0xB:{ // _field_short_enum
+                                string[] enum_names = new string[node.ChildNodes.Count];
+                                for (int i2 = 0; i2 < enum_names.Length; i2++)
+                                    enum_names[i2] = node.ChildNodes[i2].Attributes?["n"]?.Value;
+                                EnumParam new_val = new(param_name, _struct.tag_data, offset, EnumParam.EnumType._short, enum_names);
+                                container.Children.Add(new_val);
+                            }continue;
+                        case  0xC:{ // _field_long_enum
+                                string[] enum_names = new string[node.ChildNodes.Count];
+                                for (int i2 = 0; i2 < enum_names.Length; i2++)
+                                    enum_names[i2] = node.ChildNodes[i2].Attributes?["n"]?.Value;
+                                EnumParam new_val = new(param_name, _struct.tag_data, offset, EnumParam.EnumType._int, enum_names);
+                                container.Children.Add(new_val);
+                            }continue;
+                        case  0xD:{ // _field_long_flags
+                                string[] flag_names = new string[32];
+                                for (int i2 = 0; i2 < flag_names.Length; i2++){
+                                    if (node.ChildNodes.Count > i2) flag_names[i2] = node.ChildNodes[i2].Attributes?["n"]?.Value;
+                                    else flag_names[i2] = "Flag" + i2;
+                                }
+                                FlagsParam new_val = new(param_name, _struct.tag_data, offset, FlagsParam.FlagType._int, flag_names);
+                                container.Children.Add(new_val);
+                            }continue;
+                        case  0xE:{ // _field_word_flags
+                                string[] flag_names = new string[16];
+                                for (int i2 = 0; i2 < flag_names.Length; i2++){
+                                    if (node.ChildNodes.Count > i2) flag_names[i2] = node.ChildNodes[i2].Attributes?["n"]?.Value;
+                                    else flag_names[i2] = "Flag" + i2;
+                                }
+                                FlagsParam new_val = new(param_name, _struct.tag_data, offset, FlagsParam.FlagType._short, flag_names);
+                                container.Children.Add(new_val);
+                            }continue;
+                        case  0xF:{ // _field_byte_flags
+                                string[] flag_names = new string[8];
+                                for (int i2 = 0; i2 < flag_names.Length; i2++){
+                                    if (node.ChildNodes.Count > i2) flag_names[i2] = node.ChildNodes[i2].Attributes?["n"]?.Value;
+                                    else flag_names[i2] = "Flag" + i2;
+                                }
+                                FlagsParam new_val = new(param_name, _struct.tag_data, offset, FlagsParam.FlagType._byte, flag_names);
+                                container.Children.Add(new_val);
+                            }continue;
+                        case 0x10:{ // _field_point_2d
+                                DoubleshortParam new_val = new(param_name, _struct.tag_data, offset);
+                                container.Children.Add(new_val);
+                            }continue;
+                        case 0x11:{ // _field_rectangle_2d
+                                DoubleshortParam new_val = new(param_name, _struct.tag_data, offset);
+                                container.Children.Add(new_val);
+                            }continue;
+                        case 0x12: // _field_rgb_color
+                            break;  
+                        case 0x13: // _field_argb_color 
+                            break;   
+                        case 0x14:{ // _field_real
+                                FloatParam new_val = new(param_name, _struct.tag_data, offset, false);
+                                container.Children.Add(new_val);
+                            }continue;  
+                        case 0x15:{ // _field_real_fraction
+                                FloatParam new_val = new(param_name, _struct.tag_data, offset, true);
+                                container.Children.Add(new_val);
+                            }continue;  
+                        case 0x16:{ // _field_real_point_2d
+                                DoublefloatParam new_val = new(param_name, _struct.tag_data, offset, false);
+                                container.Children.Add(new_val);
+                            }continue;
+                        case 0x17:{ // _field_real_point_3d
+                                TriplefloatParam new_val = new(param_name, _struct.tag_data, offset);
+                                container.Children.Add(new_val);
+                            }continue;
+                        case 0x18:{ // _field_real_vector_2d
+                                DoublefloatParam new_val = new(param_name, _struct.tag_data, offset, false);
+                                container.Children.Add(new_val);
+                            }continue;
+                        case 0x19:{ // _field_real_vector_3d
+                                TriplefloatParam new_val = new(param_name, _struct.tag_data, offset);
+                                container.Children.Add(new_val);
+                            }continue;
+                        case 0x1A:  // _field_real_quaternion
+                            break; 
+                        case 0x1B:{ // _field_real_euler_angles_2d
+                                DoublefloatParam new_val = new(param_name, _struct.tag_data, offset, false);
+                                container.Children.Add(new_val);
+                            }continue;
+                        case 0x1C:{ // _field_real_euler_angles_3d
+                                TriplefloatParam new_val = new(param_name, _struct.tag_data, offset);
+                                container.Children.Add(new_val);
+                            }continue;
+                        case 0x1D: // _field_real_plane_2d
+                            break;  
+                        case 0x1E: // _field_real_plane_3d
+                            break;  
+                        case 0x1F: // _field_real_rgb_color
+                            break;  
+                        case 0x20: // _field_real_argb_color
+                            break;  
+                        case 0x21: // _field_real_hsv_color
+                            break;  
+                        case 0x22: // _field_real_ahsv_color
+                            break;  
+                        case 0x23:{ // _field_short_bounds
+                                DoubleshortParam new_val = new(param_name, _struct.tag_data, offset);
+                                container.Children.Add(new_val);
+                            }continue;
+                        case 0x24:{ // _field_angle_bounds
+                                DoubleangleParam new_val = new(param_name, _struct.tag_data, offset);
+                                container.Children.Add(new_val);
+                            }continue;
+                        case 0x25:{ // _field_real_bounds
+                                DoublefloatParam new_val = new(param_name, _struct.tag_data, offset, false);
+                                container.Children.Add(new_val);
+                            }continue;
+                        case 0x26:{ // _field_real_fraction_bounds
+                                DoublefloatParam new_val = new(param_name, _struct.tag_data, offset, true);
+                                container.Children.Add(new_val);
+                            }continue;
+                        case 0x27: //
+                            break;
+                        case 0x28: //
+                            break;
+                        case 0x29: // _field_long_block_flags
+                            break;
+                        case 0x2A: // _field_word_block_flags
+                            break;
+                        case 0x2B: // _field_byte_block_flags
+                            break;
+                        case 0x2C: // _field_char_block_index
+                            break;
+                        case 0x2D: // _field_custom_char_block_index
+                            break;
+                        case 0x2E: // _field_short_block_index
+                            break;
+                        case 0x2F: // _field_custom_short_block_index
+                            break;
+                        case 0x30: // _field_long_block_index
+                            break;
+                        case 0x31: // _field_custom_long_block_index
+                            break;
+                        case 0x32: // 
+                            break;
+                        case 0x33: // 
+                            break;
+                        case 0x34: case 0x35:{ // _field_skip // _field_pad
+                                short size = Convert.ToInt16(node.Attributes?["Length"]?.Value);
+                                GarbageParameter pad_garb_val = new(param_name, _struct.tag_data, offset, size);
+                                container.Children.Add(pad_garb_val);
+                            }continue;
+                        case 0x36:{ // _field_explanation
+                                CommentParam new_val = new("// "+param_name);
+                                container.Children.Add(new_val);
+                            }continue;
+                        case 0x37:{ // _field_custom
+                                // min max values for those few istances in the levl
+                                string? min = node.Attributes?["Min"]?.Value;
+                                string? max = node.Attributes?["Max"]?.Value;
+                                if (min != null) param_name += " min: " + min;
+                                if (max != null) param_name += " max: " + max;
+                                CommentParam new_val = new("// "+param_name);
+                                container.Children.Add(new_val);
+                            }continue;
+                        case 0x38:{ // _field_struct 
+                                string next_guid = node.Attributes?["GUID"]?.Value;
+                                expand_link struct_link = expandus_linkus.child_links[i];
+                                StructParam param = new(param_name, _struct, offset, next_guid, struct_link);
+                                container.Children.Add(param);
+                                setup_struct_element(struct_link, param, current_line);
+                                theoretical_line += struct_link.total_contained_lines;
+                            }continue;
+                        case 0x39:{ // _field_array
+                                string next_guid = node.Attributes?["GUID"]?.Value;
+                                int array_length = Convert.ToInt32(node.Attributes?["Count"]?.Value);
+                                int array_struct_size = Convert.ToInt32(loaded_tag.reference_root.SelectSingleNode('_' + next_guid).Attributes?["Size"]?.Value, 16);
+                                expand_link struct_link = expandus_linkus.child_links[i];
+                                ArrayParam param = new(param_name, _struct, offset, next_guid, struct_link, array_length, array_struct_size);
+                                container.Children.Add(param);
+                                setup_struct_element(struct_link, param, current_line);
+                                theoretical_line += struct_link.total_contained_lines;
+                            }continue;
+                        case 0x3A: // 
+                            break;
+                        case 0x3B: // end of struct
+                            break;
+                        case 0x3C:{ // _field_byte_integer
+                                IntegerParam new_val = new(param_name, _struct.tag_data, offset, IntegerParam.IntType.unsigned_char);
+                                container.Children.Add(new_val);
+                            }continue;
+                        case 0x3D:{ // _field_word_integer
+                                IntegerParam new_val = new(param_name, _struct.tag_data, offset, IntegerParam.IntType.unsigned_short);
+                                container.Children.Add(new_val);
+                            }continue;
+                        case 0x3E:{ // _field_dword_integer
+                                IntegerParam new_val = new(param_name, _struct.tag_data, offset, IntegerParam.IntType.unsigned_int);
+                                container.Children.Add(new_val);
+                            }continue;
+                        case 0x3F:{ // _field_qword_integer
+                                IntegerParam new_val = new(param_name, _struct.tag_data, offset, IntegerParam.IntType.unsigned_long);
+                                container.Children.Add(new_val);
+                            }continue;
+                        case 0x40:{ // _field_block_v2
+                                if (!_struct.tag_block_refs.ContainsKey((ulong)offset)) 
+                                    break;
 
-                            expand_link struct_link = expandus_linkus.child_links[i];
-                            TagblockParam param = new(param_name, _struct.tag_block_refs[(ulong)offset], struct_link);
-                            container.Children.Add(param);
-                            setup_struct_element(struct_link, param, current_line);
-                            theoretical_line += struct_link.total_contained_lines;
-                        }continue;
-                    case 0x41: // _field_reference_v2
-                        break;
-                    case 0x42:{ // _field_data_v2
-                            DataParam new_val = new(param_name, _struct.tag_resource_refs[(ulong)offset], _struct.tag_data, offset, param_group_sizes[type]);
-                            container.Children.Add(new_val);
-                        }continue;
-                    case 0x43:{ // tag_resource
-                            expand_link struct_link = expandus_linkus.child_links[i];
-                            ResourceParam param = new(param_name, _struct.resource_file_refs[(ulong)offset], struct_link);
-                            container.Children.Add(param);
-                            setup_struct_element(struct_link, param, current_line);
-                            theoretical_line += struct_link.total_contained_lines;
-                        }continue;
-                    case 0x44: // UNKNOWN
-                        break;
-                    case 0x45: // UNKNOWN
-                        break;
-                } // if we're still here, then the type was unimplemented, create new garbage block
-                GarbageParameter garb_val = new(param_name, _struct.tag_data, offset, param_group_sizes[type]);
-                container.Children.Add(garb_val);
+                                expand_link struct_link = expandus_linkus.child_links[i];
+                                TagblockParam param = new(param_name, _struct.tag_block_refs[(ulong)offset], struct_link);
+                                container.Children.Add(param);
+                                setup_struct_element(struct_link, param, current_line);
+                                theoretical_line += struct_link.total_contained_lines;
+                            }continue;
+                        case 0x41: // _field_reference_v2
+                            break;
+                        case 0x42:{ // _field_data_v2
+                                DataParam new_val = new(param_name, _struct.tag_resource_refs[(ulong)offset], _struct.tag_data, offset, param_group_sizes[type]);
+                                container.Children.Add(new_val);
+                            }continue;
+                        case 0x43:{ // tag_resource
+                                expand_link struct_link = expandus_linkus.child_links[i];
+                                ResourceParam param = new(param_name, _struct.resource_file_refs[(ulong)offset], struct_link);
+                                container.Children.Add(param);
+                                setup_struct_element(struct_link, param, current_line);
+                                theoretical_line += struct_link.total_contained_lines;
+                            }continue;
+                        case 0x44: // UNKNOWN
+                            break;
+                        case 0x45: // UNKNOWN
+                            break;
+                    } // if we're still here, then the type was unimplemented, create new garbage block
+                    GarbageParameter garb_val = new(param_name, _struct.tag_data, offset, param_group_sizes[type]);
+                    container.Children.Add(garb_val);
+                } else{
+
+                    // /////////////////// //
+                    // RELOAD CHILD PARAM //
+                    // ///////////////// //
+                    switch (type){
+                        case 0x0:{ // _field_string
+                                StringParam? pad_garb_val = bobject as StringParam;
+                                Debug.Assert(pad_garb_val != null, "cast failed");
+                                pad_garb_val.reload(_struct.tag_data, offset);
+                            }continue;  
+                        case 0x1:{ // _field_long_string
+                                StringParam? pad_garb_val = bobject as StringParam;
+                                Debug.Assert(pad_garb_val != null, "cast failed");
+                                pad_garb_val.reload(_struct.tag_data, offset);
+                            }continue; 
+                        case 0x2:{ // _field_string_id
+                                HashParam? pad_garb_val = bobject as HashParam;
+                                Debug.Assert(pad_garb_val != null, "cast failed");
+                                pad_garb_val.reload(_struct.tag_data, offset);
+                            }continue;
+                        case 0x3:  //
+                            break;
+                        case 0x3C: // _field_byte_integer // REORDERED //
+                        case 0x3D: // _field_word_integer // REORDERED //
+                        case 0x3E: // _field_dword_integer // REORDERED //
+                        case 0x3F: // _field_qword_integer // REORDERED //
+                        case 0x4:  // _field_char_integer
+                        case 0x5:  // _field_short_integer
+                        case 0x6:  // _field_long_integer
+                        case 0x7:{ // _field_int64_integer
+                                IntegerParam? new_val = bobject as IntegerParam;
+                                Debug.Assert(new_val != null, "cast failed");
+                                new_val.reload(_struct.tag_data, offset);
+                            }continue;  
+                        case 0x8:{ // _field_angle
+                                AngleParam? new_val = bobject as AngleParam;
+                                Debug.Assert(new_val != null, "cast failed");
+                                new_val.reload(_struct.tag_data, offset);
+                            }continue;
+                        case  0x9:  // _field_tag
+                            break;  
+                        case  0xA:  // _field_char_enum
+                        case  0xB:  // _field_short_enum
+                        case  0xC:{ // _field_long_enum
+                                EnumParam? new_val = bobject as EnumParam;
+                                Debug.Assert(new_val != null, "cast failed");
+                                new_val.reload(_struct.tag_data, offset);
+                            }continue;
+                        case  0xD:  // _field_long_flags
+                        case  0xE:  // _field_word_flags
+                        case  0xF:{ // _field_byte_flags
+                                FlagsParam? new_val = bobject as FlagsParam;
+                                Debug.Assert(new_val != null, "cast failed");
+                                new_val.reload(_struct.tag_data, offset);
+                            }continue;
+
+                        case 0x10:{ // _field_point_2d
+                                DoubleshortParam? new_val = bobject as DoubleshortParam;
+                                Debug.Assert(new_val != null, "cast failed");
+                                new_val.reload(_struct.tag_data, offset);
+                            }continue;
+                        case 0x11:{ // _field_rectangle_2d // we may decide to change this to its own struct some time in the future
+                                DoubleshortParam? new_val = bobject as DoubleshortParam;
+                                Debug.Assert(new_val != null, "cast failed");
+                                new_val.reload(_struct.tag_data, offset);
+                            }continue;
+                        case 0x12:  // _field_rgb_color
+                            break;  
+                        case 0x13:  // _field_argb_color 
+                            break;   
+                        case 0x14:  // _field_real
+                        case 0x15:{ // _field_real_fraction
+                                FloatParam? new_val = bobject as FloatParam;
+                                Debug.Assert(new_val != null, "cast failed");
+                                new_val.reload(_struct.tag_data, offset);
+                            }continue;
+                        case 0x25: // _field_real_bounds
+                        case 0x26: // _field_real_fraction_bounds
+                        case 0x16:  // _field_real_point_2d
+                        case 0x18:{ // _field_real_vector_2d // REORDERED //
+                                DoublefloatParam? new_val = bobject as DoublefloatParam;
+                                Debug.Assert(new_val != null, "cast failed");
+                                new_val.reload(_struct.tag_data, offset);
+                            }continue;
+                        case 0x17:  // _field_real_point_3d // REORDERED //
+                        case 0x19:{ // _field_real_vector_3d
+                                TriplefloatParam? new_val = bobject as TriplefloatParam;
+                                Debug.Assert(new_val != null, "cast failed");
+                                new_val.reload(_struct.tag_data, offset);
+                            }continue;
+                        case 0x1A:  // _field_real_quaternion
+                            break; 
+                        case 0x1B:{ // _field_real_euler_angles_2d
+                                DoublefloatParam? new_val = bobject as DoublefloatParam;
+                                Debug.Assert(new_val != null, "cast failed");
+                                new_val.reload(_struct.tag_data, offset);
+                            }continue;
+                        case 0x1C:{ // _field_real_euler_angles_3d
+                                TriplefloatParam? new_val = bobject as TriplefloatParam;
+                                Debug.Assert(new_val != null, "cast failed");
+                                new_val.reload(_struct.tag_data, offset);
+                            }continue;
+                        case 0x1D: // _field_real_plane_2d
+                            break;  
+                        case 0x1E: // _field_real_plane_3d
+                            break;  
+                        case 0x1F: // _field_real_rgb_color
+                            break;  
+                        case 0x20: // _field_real_argb_color
+                            break;  
+                        case 0x21: // _field_real_hsv_color
+                            break;  
+                        case 0x22: // _field_real_ahsv_color
+                            break;  
+                        case 0x23:{ // _field_short_bounds
+                                DoubleshortParam? new_val = bobject as DoubleshortParam;
+                                Debug.Assert(new_val != null, "cast failed");
+                                new_val.reload(_struct.tag_data, offset);
+                            }continue;
+                        case 0x24:{ // _field_angle_bounds
+                                DoubleangleParam? new_val = bobject as DoubleangleParam;
+                                Debug.Assert(new_val != null, "cast failed");
+                                new_val.reload(_struct.tag_data, offset);
+                            }continue;
+                        case 0x27: //
+                            break;
+                        case 0x28: //
+                            break;
+                        case 0x29: // _field_long_block_flags
+                            break;
+                        case 0x2A: // _field_word_block_flags
+                            break;
+                        case 0x2B: // _field_byte_block_flags
+                            break;
+                        case 0x2C: // _field_char_block_index
+                            break;
+                        case 0x2D: // _field_custom_char_block_index
+                            break;
+                        case 0x2E: // _field_short_block_index
+                            break;
+                        case 0x2F: // _field_custom_short_block_index
+                            break;
+                        case 0x30: // _field_long_block_index
+                            break;
+                        case 0x31: // _field_custom_long_block_index
+                            break;
+                        case 0x32: // 
+                            break;
+                        case 0x33: // 
+                            break;
+                        case 0x34: case 0x35:{ // _field_skip // _field_pad
+                                GarbageParameter? new_val = bobject as GarbageParameter;
+                                Debug.Assert(new_val != null, "cast failed");
+                                new_val.reload(_struct.tag_data, offset);
+                            }continue;
+                        case 0x36:{ // _field_explanation
+                                // do literally nothing, this block is fine as is right now
+                            }continue;
+                        case 0x37:{ // _field_custom
+                                // also do literally nothing, the custom values are static
+                            }continue;
+
+
+                        case 0x38:{ // _field_struct 
+                                StructParam? new_val = bobject as StructParam;
+                                Debug.Assert(new_val != null, "cast failed");
+                                new_val.reload(_struct, offset);
+                                theoretical_line += new_val.parent.total_contained_lines;
+                                // then process children //
+                                if (new_val.parent.is_opened)
+                                    new_val.parent.expand(true);
+                            }continue;
+                        case 0x39:{ // _field_array
+                                ArrayParam? new_val = bobject as ArrayParam;
+                                Debug.Assert(new_val != null, "cast failed");
+                                new_val.reload(_struct, offset);
+                                theoretical_line += new_val.parent.total_contained_lines;
+                                // then process children //
+                                if (new_val.parent.is_opened)
+                                    new_val.parent.expand(true);
+                            }continue;
+                        case 0x3A: // 
+                            break;
+                        case 0x3B: // end of struct // do we not have criteria that blocks this one?
+                            break;
+                        case 0x40:{ // _field_block_v2
+                                Debug.Assert(_struct.tag_block_refs.ContainsKey((ulong)offset), "idk why this is here, but changing it into something neater");
+
+                                TagblockParam? new_val = bobject as TagblockParam;
+                                Debug.Assert(new_val != null, "cast failed");
+                                new_val.reload(param_name, _struct.tag_block_refs[(ulong)offset]);
+                                theoretical_line += new_val.parent.total_contained_lines;
+                                // then process children //
+                                if (new_val.parent.is_opened)
+                                    new_val.parent.expand(true);
+                            }continue;
+                        case 0x41: // _field_reference_v2
+                            break;
+                        case 0x42:{ // _field_data_v2
+                                DataParam? new_val = bobject as DataParam;
+                                Debug.Assert(new_val != null, "cast failed");
+                                new_val.reload(param_name, _struct.tag_resource_refs[(ulong)offset], _struct.tag_data, offset, param_group_sizes[type]);
+                            }continue;
+                        case 0x43:{ // tag_resource
+                                ResourceParam? new_val = bobject as ResourceParam;
+                                Debug.Assert(new_val != null, "cast failed");
+                                new_val.reload(_struct.tag_block_refs[(ulong)offset]);
+                                theoretical_line += new_val.parent.total_contained_lines;
+                                // then process children //
+                                if (new_val.parent.is_opened)
+                                    new_val.parent.expand(true);
+                            }continue;
+                        case 0x44: // UNKNOWN
+                            break;
+                        case 0x45: // UNKNOWN
+                            break;
+                    } // if we're still here, then the type was unimplemented, create new garbage block
+                    GarbageParameter? garb_val = bobject as GarbageParameter;
+                    Debug.Assert(garb_val != null, "cast failed");
+                    garb_val.reload(_struct.tag_data, offset);
+                }
+
+                
             }
         }
 

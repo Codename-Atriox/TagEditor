@@ -36,6 +36,10 @@ namespace TagEditor.UI.Interfaces.Params
             guid = _guid;
             parent = _parent;
         }
+        public void reload(tag.thing _tag_data, int _struct_offset){
+            tag_data = _tag_data;
+            struct_offset = _struct_offset; // shouldn't need to be updated?
+        }
         public tag.thing tag_data;
         public int struct_offset; // explicity used for struct types that are inlined with the parent block's params
         public string guid; // this is also because of structs, and also array's too, for both

@@ -23,7 +23,7 @@ namespace TagEditor.UI.Interfaces.Editor.Params
     /// </summary>
     public partial class ArrayParam : UserControl
     {
-        public ArrayParam(string name, tag.thing _tag_data, int _struct_offset, string _guid, expand_link _parent, int _length)
+        public ArrayParam(string name, tag.thing _tag_data, int _struct_offset, string _guid, expand_link _parent, int _length, int _struct_size)
         {
 
             InitializeComponent();
@@ -36,6 +36,16 @@ namespace TagEditor.UI.Interfaces.Editor.Params
             guid = _guid;
             parent = _parent;
             length = _length;
+            struct_size = _struct_size;
+        }
+        public void reload(tag.thing _tag_data, int _struct_offset){
+            // name does not need updating? as the size is fixed between every instance
+            tag_data = _tag_data;
+            struct_offset = _struct_offset;
+            // this does not actually need to be reset, but we're going to do it anyway
+            selected_index = 0;
+            indexbox.Text = selected_index.ToString();
+            // we should force it to reload its content? considering we changed the selected index
         }
         public tag.thing tag_data;
         public int struct_offset; // explicity used for struct types that are inlined with the parent block's params
@@ -45,18 +55,19 @@ namespace TagEditor.UI.Interfaces.Editor.Params
 
         public int selected_index = 0; // we will soon have ascript that will alter thsi, it will then be read externally
         public int length;
+        public int struct_size;
         private void Button_Click(object sender, RoutedEventArgs e){
             parent.expand(false);
         }
 
-        private void TextBox_MouseWheel(object sender, MouseWheelEventArgs e)
-        {
+        private void TextBox_MouseWheel(object sender, MouseWheelEventArgs e){
             int direction = 0;
-            if (e.Delta < 0) direction = -1;
-            else if (e.Delta > 0) direction = 1;
+            e.Handled = true;
+            if (e.Delta < 0) direction = 1;
+            else if (e.Delta > 0) direction = -1;
             direction += selected_index;
 
-            if (direction < length && 0 < direction){
+            if (direction < length && 0 <= direction){
                 selected_index = direction;
                 indexbox.Text = selected_index.ToString();
                 if (parent.is_opened) parent.expand(true);

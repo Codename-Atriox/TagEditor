@@ -18,8 +18,8 @@
                 <ColumnDefinition Width="Auto"/>
                 <ColumnDefinition/>
             </Grid.ColumnDefinitions>
-            <Button Height="18" Foreground="#FFD6D6D6" Background="Transparent" Margin="0,0,5,0" Click="Button_Click">
-                <TextBlock x:Name="Namebox" Text="SampleParamName"/>
+            <Button Height="18" Foreground="#FF3AAAE6" Background="Transparent" Margin="0,0,5,0" Click="Button_Click">
+                <TextBlock x:Name="Namebox" Text="SampleParamName" />
             </Button>
             <TextBox x:Name="indexbox" Text="0" Grid.Column="1" Background="{x:Null}" Margin="0,0,5,0" Padding="2,0,2,0" MouseWheel="TextBox_MouseWheel" KeyDown="TextBox_KeyDown"/>
             <Border x:Name="expand_indicator" Grid.Column="2" BorderBrush="gray" BorderThickness="1">

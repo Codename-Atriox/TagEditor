@@ -31,6 +31,12 @@ namespace TagEditor.UI.Interfaces.Editor.Params
 
             Valuebox.Text = BitConverter.ToString(_parent_block[_block_offset..(_block_offset + _length)]).Replace("-", string.Empty);
         }
+        public void reload(string name, byte[] _datter, byte[] _parent_block, int _block_offset, short _length){
+
+            Namebox.Text = name + " [" + _datter.Length + "]";
+            data = _datter;
+            Valuebox.Text = BitConverter.ToString(_parent_block[_block_offset..(_block_offset + _length)]).Replace("-", string.Empty);
+        }
         byte[] data;
 
 

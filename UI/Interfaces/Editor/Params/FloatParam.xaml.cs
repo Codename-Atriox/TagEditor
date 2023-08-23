@@ -24,6 +24,13 @@ namespace TagEditor.UI.Interfaces.Params{
             is_setting_up = false;
             is_fraction = _is_fraction;
         }
+        public void reload(byte[] _parent_block, int _block_offset){
+            is_setting_up = true;
+            parent_block = _parent_block;
+            block_offset = _block_offset;
+            loadValue();
+            is_setting_up = false;
+        }
         bool is_setting_up = true;
         byte[] parent_block;
         int block_offset;

@@ -13,6 +13,7 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
+using System.Xml.Linq;
 
 namespace TagEditor.UI.Interfaces.Params
 {
@@ -28,6 +29,13 @@ namespace TagEditor.UI.Interfaces.Params
             InitializeComponent();
             loadValue();
             Namebox.Text = name;
+            is_setting_up = false;
+        }
+        public void reload(byte[] _parent_block, int _block_offset){
+            is_setting_up = true;
+            parent_block = _parent_block;
+            block_offset = _block_offset;
+            loadValue();
             is_setting_up = false;
         }
         bool is_setting_up = true;

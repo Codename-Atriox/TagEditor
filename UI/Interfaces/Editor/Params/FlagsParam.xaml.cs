@@ -33,6 +33,11 @@ namespace TagEditor.UI.Interfaces.Editor.Params
             loadValue();
             Namebox.Text = name;
         }
+        public void reload(byte[] _parent_block, int _block_offset){
+            parent_block = _parent_block;
+            block_offset = _block_offset;
+            loadValue();
+        }
         byte[] parent_block;
         int block_offset;
         // flag stuff //

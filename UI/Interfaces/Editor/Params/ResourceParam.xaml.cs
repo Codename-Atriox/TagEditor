@@ -32,6 +32,9 @@ namespace TagEditor.UI.Interfaces.Editor.Params
             Namebox.Text = name;
             parent = _parent;
         }
+        public void reload(tagdata_struct _tag_data){
+            tag_data = _tag_data;
+        }
         public tagdata_struct tag_data;
         public string guid; // this is also because of structs, and also array's too, for both
 
