@@ -21,7 +21,6 @@ using System.Timers;
 using System.Windows.Threading;
 using static Infinite_module_test.tag_structs;
 
-
 namespace TagEditor
 {
     /// <summary>
@@ -118,6 +117,11 @@ namespace TagEditor
             if (dlg.ShowDialog() == true) TagViewer_OpenTag(dlg.FileName);
         }
         public void TagViewer_OpenTag(string tag_path){
+            // TODO: if active tag viewer is null, open a new one
+            Active_TagViewer.OpenTag(tag_path, plugins_path);
+        }
+        public void TagViewer_OpenModuleTag(directory_item tag_path)
+        {
             // TODO: if active tag viewer is null, open a new one
             Active_TagViewer.OpenTag(tag_path, plugins_path);
         }

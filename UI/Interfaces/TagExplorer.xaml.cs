@@ -1,42 +1,127 @@
-﻿using System;
+﻿using Microsoft.Win32;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Forms;
 using System.Windows.Input;
+using Infinite_module_test;
+using System.Windows.Shapes;
+
 
 namespace TagEditor.UI.Windows{
+    public class directory_item{
+        public directory_item(string n, bool i_f, List<directory_item>? c, bool i_m, string p, int i, module_structs.module? m){
+            name = n;
+            is_folder = i_f;
+            children = c;
+            is_module = i_m;
+            path = p;
+            module_file_index = i;
+            source_module = m;}
+        public string name;
+        public bool is_folder;
+        // if folder than use this
+        public List<directory_item>? children; // it would be a good idea to cache all child files & directories so we can calculate which items we're displaying to virtualize the list
+
+        public bool is_module;
+        public string path; // used as literal path for non-modules, used as toplevel dictionary key for module folders
+        // if module then use these
+        public int module_file_index;
+        public module_structs.module? source_module;
+    }
+
     public partial class TagExplorer : System.Windows.Controls.UserControl{
         public MainWindow main; // only used for output. IE sending a call to the main window to open a tag, errors
+
+
+        // structs used to map out directory structures
+        List<directory_item> top_level_folders = new();
+
         public TagExplorer(MainWindow _main){
             main = _main;
             InitializeComponent();
             fileTemplate = (DataTemplate)FindResource("FileItem");
         }
         DataTemplate fileTemplate = null;
+
+
+        // this is only run for local files, not module files
+        public List<directory_item> recursive_folder_mapping(string folder){
+            if (Directory.Exists(folder)) throw new Exception("folder was not valid!!");
+
+            List<directory_item> output = new();
+            foreach (string file in System.IO.Directory.GetFiles(folder, "*", SearchOption.TopDirectoryOnly))
+                output.Add(new directory_item(System.IO.Path.GetFileName(file), false, null, false, file, -1, null));
+            foreach (string file in System.IO.Directory.GetDirectories(folder, "*", SearchOption.TopDirectoryOnly))
+                output.Add(new directory_item(System.IO.Path.GetFileName(file), true, recursive_folder_mapping(file), false, file, -1, null));
+            return output;
+        }
         public void OpenDirectory(bool clear_previous){
             System.Windows.Forms.FolderBrowserDialog openFolderDialogue = new System.Windows.Forms.FolderBrowserDialog();
             var result = openFolderDialogue.ShowDialog();
             string directory = openFolderDialogue.SelectedPath;
             if ((result == DialogResult.OK) && (!string.IsNullOrWhiteSpace(directory)) && Directory.Exists(directory)){
                 if (clear_previous) Button_CloseDirectory(null, null); // only due of formality, else we'd have that single line
-                tag_view.Items.Add(CreateTreeDirectory(new DirectoryInfo(directory)));
+                // configure the directory item, so we can parse it
+
+                directory_item folder = new directory_item(System.IO.Path.GetFileName(directory), true, recursive_folder_mapping(directory), false, directory, -1, null);
+                top_level_folders.Add(folder);
+
+                tag_view.Items.Add(CreateTreeDirectory(folder));
+        }}
+        public void OpenModule(bool clear_previous){
+            Microsoft.Win32.OpenFileDialog openFileDialog = new Microsoft.Win32.OpenFileDialog();
+            var result = openFileDialog.ShowDialog();
+            string file = openFileDialog.FileName;
+            if ((result == true) && (!string.IsNullOrWhiteSpace(file)) && File.Exists(file)){
+                // then open the selected module
+
+
+
+                if (clear_previous) Button_CloseDirectory(null, null); // only due of formality, else we'd have that single line
+                tag_view.Items.Add(CreateTreeDirectory(new DirectoryInfo(file)));
         }}
 
         public void TreeViewItem_Expanded(object sender, RoutedEventArgs e){
             TreeViewItem item = e.Source as TreeViewItem;
-            if (item.Tag is DirectoryInfo){
-                if (item.Items.Count != 1 || item.Items[0] != "Loading...") return;
-                item.Items.Clear();
-                DirectoryInfo expandedDir = (item.Tag as DirectoryInfo);
-                try{foreach (DirectoryInfo subDir in expandedDir.GetDirectories()) item.Items.Add(CreateTreeDirectory(subDir));
-                    foreach (FileInfo subDir in expandedDir.GetFiles()){
-                        var new_item = CreateTreeFile(subDir);
-                        item.Items.Add(new_item);
-                        if ((!FilenameMatches(subDir.Name)) || (subDir.Name.Contains("[") && (ShowResources.IsChecked != true))) new_item.Visibility = Visibility.Collapsed;
-                }} catch { main.DisplayNote("Unable to open child of "+ expandedDir.FullName, null, MainWindow.error_level.NOTE);}}
-            else main.TagViewer_OpenTag(item.Tag as string);
+            directory_item expanded_item = (item.Tag as directory_item);
+            if (expanded_item.is_folder){
+                if (item.Items.Count != 1 || item.Items[0] != "Loading...") return; // do not do anything if this folder has already had its content loaded
+                item.Items.Clear(); // remove the placeholder loading... item
+
+
+                // since we're using a unified format, theres no need to have separate handling for local folders & module folders, especially as all contained content is already loaded
+                //if (expanded_item.is_module){ // open as module folder
+                //    if (expanded_item.children == null) return; // theres no children to load?
+                //    foreach (directory_item subDir in expanded_item.children){ }
+                //}else 
+                try{ // open as regular folder
+                    if (expanded_item.children == null) return; // theres no children to load?
+                    foreach (directory_item subDir in expanded_item.children){
+                        if (subDir.is_folder){ // process folders
+                            item.Items.Add(CreateTreeDirectory(subDir));
+                        } else { // process files
+                            var new_item = CreateTreeFile(subDir);
+                            item.Items.Add(new_item);
+                            if ( (!FilenameMatches(subDir.name)) || (subDir.name.Contains("[") && (ShowResources.IsChecked != true)) )
+                                new_item.Visibility = Visibility.Collapsed;
+
+                }}} catch { main.DisplayNote("Unable to open child of "+ expanded_item.path, null, MainWindow.error_level.NOTE);}
+
+            }else { // open as potential tag file
+
+                if (expanded_item.is_module) // handle module file
+                    main.TagViewer_OpenModuleTag(expanded_item);
+                else // handle as regular disk file
+                    main.TagViewer_OpenTag(expanded_item.path);
+                
+
+
+            }
+
+
         }
         public void TreeViewItem_Closed(object sender, RoutedEventArgs e){
             if (ClearChildren.IsChecked == true){ // heck you nullable boolean
@@ -44,22 +129,22 @@ namespace TagEditor.UI.Windows{
                 item.Items.Clear();
                 item.Items.Add("Loading...");
         }}
-        private TreeViewItem CreateTreeDirectory(DirectoryInfo o){
-            TreeViewItem item = CreateTreeDir(o);
+        private TreeViewItem CreateTreeDirectory(directory_item dir){
+            TreeViewItem item = CreateTreeDir(dir);
             item.Items.Add("Loading...");
             return item;
         }
-        private TreeViewItem CreateTreeDir(DirectoryInfo o){
+        private TreeViewItem CreateTreeDir(directory_item dir){
             TreeViewItem item = new TreeViewItem();
-            item.Header = o.Name;
-            item.Tag = o;
+            item.Header = dir.name;
+            item.Tag = dir;
             return item;
         }
-        private TreeViewItem CreateTreeFile(FileInfo o){
+        private TreeViewItem CreateTreeFile(directory_item dir){
             TreeViewItem item = new TreeViewItem();
-            item.Header = o.Name;
+            item.Header = dir.name;
             item.HeaderTemplate = fileTemplate;
-            item.Tag = o.FullName;
+            item.Tag = dir;
             return item;
         }
         private void Button_OpenAll(object sender, RoutedEventArgs e) => Recurs_OpenAll(tag_view.Items);
@@ -83,7 +168,7 @@ namespace TagEditor.UI.Windows{
         private void Toggle_ShowResources(object sender, RoutedEventArgs e) => Recurs_ToggleResources(tag_view.Items);
         private void Recurs_ToggleResources(ItemCollection items){
             foreach (System.Windows.Controls.TreeViewItem item in items){
-                DirectoryInfo? expandedDir = item.Tag as DirectoryInfo;
+                DirectoryInfo? expandedDir = item.Tag as directory_item;
                 if (expandedDir != null && item.IsExpanded) Recurs_ToggleResources(item.Items);
                 else if ((item.Header as string).Contains("[")) item.Visibility = (ShowResources.IsChecked == true) ? Visibility.Visible : Visibility.Collapsed;
         }}
@@ -99,7 +184,7 @@ namespace TagEditor.UI.Windows{
             return output;
         }
         public bool SearchMatch(TreeViewItem item){
-            DirectoryInfo? expandedDir = item.Tag as DirectoryInfo;
+            DirectoryInfo? expandedDir = item.Tag as directory_item;
             string name = item.Header as string;
             bool had_match = false;
             if (expandedDir != null){
@@ -187,7 +272,7 @@ namespace TagEditor.UI.Windows{
         }
         private void Recurse_UnhideFolders(ItemCollection items){
             foreach (System.Windows.Controls.TreeViewItem item in items){
-                DirectoryInfo? expandedDir = item.Tag as DirectoryInfo;
+                DirectoryInfo? expandedDir = item.Tag as directory_item;
                 if (expandedDir != null){
                     item.Visibility = Visibility.Visible;
                     Recurse_UnhideFolders(item.Items);
