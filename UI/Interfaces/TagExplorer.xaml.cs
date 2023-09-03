@@ -49,7 +49,7 @@ namespace TagEditor.UI.Windows{
 
         // this is only run for local files, not module files
         public List<directory_item> recursive_folder_mapping(string folder){
-            if (Directory.Exists(folder)) throw new Exception("folder was not valid!!");
+            if (!Directory.Exists(folder)) throw new Exception("folder was not valid!!");
 
             List<directory_item> output = new();
             foreach (string file in System.IO.Directory.GetFiles(folder, "*", SearchOption.TopDirectoryOnly))
@@ -71,17 +71,38 @@ namespace TagEditor.UI.Windows{
 
                 tag_view.Items.Add(CreateTreeDirectory(folder));
         }}
+        public List<directory_item> module_folder_mapping(module_structs.module mod){
+
+            List<directory_item> output = new();
+            // first process the folders
+            foreach(var list in mod.file_groups){ // List<module_structs.module.indexed_module_file>
+
+                // process all children into list
+                List<directory_item> group_files = new();
+                foreach (var file in list.Value) // List<module_structs.module.indexed_module_file>    
+                    group_files.Add(new directory_item(file.name, false, null, true, file.name, file.source_file_header_index, mod));
+                
+                // then create folder
+                output.Add(new directory_item(list.Key, true, group_files, true, list.Key, -1, mod));
+            }
+
+            return output;
+        }
         public void OpenModule(bool clear_previous){
             Microsoft.Win32.OpenFileDialog openFileDialog = new Microsoft.Win32.OpenFileDialog();
             var result = openFileDialog.ShowDialog();
             string file = openFileDialog.FileName;
             if ((result == true) && (!string.IsNullOrWhiteSpace(file)) && File.Exists(file)){
                 // then open the selected module
+                module_structs.module mod;
+                try{
+                    mod = new module_structs.module(file);
+                    directory_item folder = new directory_item(System.IO.Path.GetFileName(file), true, module_folder_mapping(mod), true, file, -1, mod);
+                    top_level_folders.Add(folder);
+                    if (clear_previous) Button_CloseDirectory(null, null); // only due of formality, else we'd have that single line
+                    tag_view.Items.Add(CreateTreeDirectory(folder));
 
-
-
-                if (clear_previous) Button_CloseDirectory(null, null); // only due of formality, else we'd have that single line
-                tag_view.Items.Add(CreateTreeDirectory(new DirectoryInfo(file)));
+                } catch{main.DisplayNote("failed to open module: " + file, null, MainWindow.error_level.WARNING);}
         }}
 
         public void TreeViewItem_Expanded(object sender, RoutedEventArgs e){
@@ -111,17 +132,11 @@ namespace TagEditor.UI.Windows{
                 }}} catch { main.DisplayNote("Unable to open child of "+ expanded_item.path, null, MainWindow.error_level.NOTE);}
 
             }else { // open as potential tag file
-
                 if (expanded_item.is_module) // handle module file
                     main.TagViewer_OpenModuleTag(expanded_item);
                 else // handle as regular disk file
                     main.TagViewer_OpenTag(expanded_item.path);
-                
-
-
             }
-
-
         }
         public void TreeViewItem_Closed(object sender, RoutedEventArgs e){
             if (ClearChildren.IsChecked == true){ // heck you nullable boolean
@@ -161,14 +176,18 @@ namespace TagEditor.UI.Windows{
                 item.Items.Clear();
                 item.Items.Add("Loading...");
         }}
+
         private void Button_OpenDirectory(object sender, RoutedEventArgs e) => OpenDirectory(true);
         private void Button_AddDirectory(object sender, RoutedEventArgs e) => OpenDirectory(false);
+        private void Button_OpenModule(object sender, RoutedEventArgs e) => OpenModule(true);
+        private void Button_AddModule(object sender, RoutedEventArgs e) => OpenModule(false);
+
         private void Button_CloseDirectory(object sender, RoutedEventArgs e) => tag_view.Items.Clear();
 
         private void Toggle_ShowResources(object sender, RoutedEventArgs e) => Recurs_ToggleResources(tag_view.Items);
         private void Recurs_ToggleResources(ItemCollection items){
             foreach (System.Windows.Controls.TreeViewItem item in items){
-                DirectoryInfo? expandedDir = item.Tag as directory_item;
+                directory_item? expandedDir = item.Tag as directory_item;
                 if (expandedDir != null && item.IsExpanded) Recurs_ToggleResources(item.Items);
                 else if ((item.Header as string).Contains("[")) item.Visibility = (ShowResources.IsChecked == true) ? Visibility.Visible : Visibility.Collapsed;
         }}
@@ -184,7 +203,7 @@ namespace TagEditor.UI.Windows{
             return output;
         }
         public bool SearchMatch(TreeViewItem item){
-            DirectoryInfo? expandedDir = item.Tag as directory_item;
+            directory_item? expandedDir = item.Tag as directory_item;
             string name = item.Header as string;
             bool had_match = false;
             if (expandedDir != null){
@@ -196,7 +215,7 @@ namespace TagEditor.UI.Windows{
                     had_match = true;
                     item.IsExpanded = true; 
                 }else{ // if the children are not loaded, load them
-                    TreeViewItem? result = SearchClosedMatch(expandedDir);
+                    TreeViewItem? result = null; // SearchClosedMatch(expandedDir);
                     if (result == null) goto END; // no children, go to end
                     item.Items.Clear();
                     item.IsExpanded = true;
@@ -218,49 +237,50 @@ namespace TagEditor.UI.Windows{
             else if (HideFolders.IsChecked == true) item.Visibility = Visibility.Collapsed;
             return had_match;
         }
-        public TreeViewItem? SearchClosedMatch(DirectoryInfo directory){
-            List<TreeViewItem> matched_children = new();
-            bool match = false;
-            foreach (DirectoryInfo subDir in directory.GetDirectories()){
-                TreeViewItem? subItem = SearchClosedMatch(subDir);
-                if (subItem != null){
-                    matched_children.Add(subItem);
-                    match = true;
-            }}
-            if (!match){
-                foreach (FileInfo file in directory.GetFiles()) 
-                    if (FilenameMatches(file.Name) && ((!file.Name.Contains("[")) || ShowResources.IsChecked == true)) match = true;
-                if ((SearchFolderNames.IsChecked == true) && name_matches(directory.Name)) match = true;
-            }
-            if (match){
-                TreeViewItem output = CreateTreeDir(directory);
-                output.IsExpanded = true;
-                foreach (DirectoryInfo subDir in directory.GetDirectories()){
-                    bool was_found_before = false;
-                    for (int i = 0; i < matched_children.Count; i++){
-                        TreeViewItem matched_item = matched_children[i];
-                        if (subDir.Name == matched_item.Header as string){
-                            was_found_before = true;
-                            output.Items.Add(matched_item);
-                            matched_item.IsExpanded = true;
-                            matched_children.RemoveAt(i); // cleanup for a little bit of efficiency
-                            break;
-                    }}
-                    if (!was_found_before){
-                        TreeViewItem hiddenitem = CreateTreeDirectory(subDir);
-                        if (HideFolders.IsChecked == true) hiddenitem.Visibility = Visibility.Collapsed;
-                        output.Items.Add(hiddenitem);
-                }}
-                foreach (FileInfo subFile in directory.GetFiles()){
-                    TreeViewItem new_item = CreateTreeFile(subFile);
-                    output.Items.Add(new_item);
-                    if (!FilenameMatches(subFile.Name) || (subFile.Name.Contains("[") && (ShowResources.IsChecked == false)))
-                        new_item.Visibility = Visibility.Collapsed;
-                }
-                return output;
-            }
-            return null;
-        }
+        // deprecated as we're going to update to a newer system in the future that will work very differently
+        //public TreeViewItem? SearchClosedMatch(directory_item directory){
+        //    List<TreeViewItem> matched_children = new();
+        //    bool match = false;
+        //    foreach (DirectoryInfo subDir in directory.GetDirectories()){
+        //        TreeViewItem? subItem = SearchClosedMatch(subDir);
+        //        if (subItem != null){
+        //            matched_children.Add(subItem);
+        //            match = true;
+        //    }}
+        //    if (!match){
+        //        foreach (FileInfo file in directory.GetFiles()) 
+        //            if (FilenameMatches(file.Name) && ((!file.Name.Contains("[")) || ShowResources.IsChecked == true)) match = true;
+        //        if ((SearchFolderNames.IsChecked == true) && name_matches(directory.Name)) match = true;
+        //    }
+        //    if (match){
+        //        TreeViewItem output = CreateTreeDir(directory);
+        //        output.IsExpanded = true;
+        //        foreach (DirectoryInfo subDir in directory.GetDirectories()){
+        //            bool was_found_before = false;
+        //            for (int i = 0; i < matched_children.Count; i++){
+        //                TreeViewItem matched_item = matched_children[i];
+        //                if (subDir.Name == matched_item.Header as string){
+        //                    was_found_before = true;
+        //                    output.Items.Add(matched_item);
+        //                    matched_item.IsExpanded = true;
+        //                    matched_children.RemoveAt(i); // cleanup for a little bit of efficiency
+        //                    break;
+        //            }}
+        //            if (!was_found_before){
+        //                TreeViewItem hiddenitem = CreateTreeDirectory(subDir);
+        //                if (HideFolders.IsChecked == true) hiddenitem.Visibility = Visibility.Collapsed;
+        //                output.Items.Add(hiddenitem);
+        //        }}
+        //        foreach (FileInfo subFile in directory.GetFiles()){
+        //            TreeViewItem new_item = CreateTreeFile(subFile);
+        //            output.Items.Add(new_item);
+        //            if (!FilenameMatches(subFile.Name) || (subFile.Name.Contains("[") && (ShowResources.IsChecked == false)))
+        //                new_item.Visibility = Visibility.Collapsed;
+        //        }
+        //        return output;
+        //    }
+        //    return null;
+        //}
         public bool FilenameMatches(string name){
             if ((ShowResources.IsChecked == true) || (!name.Contains("["))) if (name_matches(name)) return true;
             return false;
@@ -272,7 +292,7 @@ namespace TagEditor.UI.Windows{
         }
         private void Recurse_UnhideFolders(ItemCollection items){
             foreach (System.Windows.Controls.TreeViewItem item in items){
-                DirectoryInfo? expandedDir = item.Tag as directory_item;
+                directory_item? expandedDir = item.Tag as directory_item;
                 if (expandedDir != null){
                     item.Visibility = Visibility.Visible;
                     Recurse_UnhideFolders(item.Items);

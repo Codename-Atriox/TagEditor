@@ -114,14 +114,16 @@ namespace TagEditor.UI.Windows{
             // error checking past, open tag for real
 
             // lets first get a list of all the resource file that this guy probably owns
-            List<KeyValuePair<byte[], bool>> resource_list;
-            try
-            {
-                resource_list = item.source_module.get_tag_resource_list(item.module_file_index);
-            }
-            catch
-            {
+            List<KeyValuePair<byte[], bool>> resource_list = new();
+            try{ // idk why we have a try catch here
+                List<byte[]> resulting_resources = item.source_module.get_tag_resource_list(item.module_file_index);
+                foreach (byte[] resource in resulting_resources) {
 
+                    bool is_standalone_resource = resource[0..4].SequenceEqual(new byte[] { 0x75, 0x63, 0x73, 0x68 }); // test for those 4 chars at the top of the file
+                    resource_list.Add(new KeyValuePair<byte[], bool>(resource, is_standalone_resource));
+            }}catch{
+                main.DisplayNote(item.name + " failed to read resources", null, error_level.WARNING);
+                return;
             }
             
             // get the resource from the module
@@ -133,18 +135,20 @@ namespace TagEditor.UI.Windows{
                 bool inital = resource_list[0].Value;
                 foreach (var resource in resource_list){
                     if (resource.Value != inital){
-                        main.DisplayNote(resource + " does not have a matching chunked/non-chunked status, please submit this scenario to the C:A developers", null, error_level.WARNING);
+                        main.DisplayNote(resource + " does not have a matching chunked/non-chunked status!!", null, error_level.WARNING);
             }}}
             
-
+            // we forgot to actually load the tag bytes from module
+            // + for some reason we are failing to read resources
 
             tag test = new tag(plugins_path, resource_list);
             try{
-                byte[] tagbytes = File.ReadAllBytes(item.name);
+                byte[] tagbytes = item.source_module.get_tag_bytes(item.module_file_index);
                 if (!test.Load_tag_file(tagbytes)){
                     main.DisplayNote(item.name + " was not able to be loaded as a tag", null, error_level.WARNING);
                     return;
-            }} catch{ main.DisplayNote(item.name + " returned an error (likely due to file read attempt)", null, error_level.WARNING);}
+            }} catch{ 
+                main.DisplayNote(item.name + " returned an error (likely due to file read attempt)", null, error_level.WARNING);}
 
             // load new tag tab here
             TabItem new_tag = new();

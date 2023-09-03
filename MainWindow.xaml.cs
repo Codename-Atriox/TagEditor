@@ -120,10 +120,10 @@ namespace TagEditor
             // TODO: if active tag viewer is null, open a new one
             Active_TagViewer.OpenTag(tag_path, plugins_path);
         }
-        public void TagViewer_OpenModuleTag(directory_item tag_path)
+        public void TagViewer_OpenModuleTag(directory_item tag_item)
         {
             // TODO: if active tag viewer is null, open a new one
-            Active_TagViewer.OpenTag(tag_path, plugins_path);
+            Active_TagViewer.OpenModuleTag(tag_item, plugins_path);
         }
 
     }
