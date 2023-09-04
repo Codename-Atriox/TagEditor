@@ -23,6 +23,7 @@ using static System.Net.Mime.MediaTypeNames;
 using System.Xml.Linq;
 using System.Collections.ObjectModel;
 using TagEditor.UI.Interfaces.Editor.Params;
+using static TagEditor.MainWindow;
 
 namespace TagEditor.UI.Windows{
     public partial class TagInstance : UserControl{
@@ -188,7 +189,13 @@ namespace TagEditor.UI.Windows{
                 // OPEN CLOSED TAG
                 } else{ // is closed // open the tag as normal, generate new UI
                     if (struct_UI_element == null) Debug.Assert(false, "bad. no binded control");
-                    if (struct_UI_element is TagblockParam && (struct_UI_element as TagblockParam).tag_data.blocks.Count == 0) return; // failed because tagblock not openable
+                    if (struct_UI_element is TagblockParam && (struct_UI_element as TagblockParam).tag_data.blocks.Count == 0){
+                        send_info_to.main.DisplayNote((struct_UI_element as TagblockParam).Namebox.Text + " has no content", null, error_level.NOTE);
+                        return;} // failed because tagblock not openable
+                    if (struct_UI_element is ResourceParam && (struct_UI_element as ResourceParam).tag_data == null){
+                        send_info_to.main.DisplayNote((struct_UI_element as ResourceParam).Namebox.Text + " has no loaded tag data", null, error_level.NOTE);
+                        return;} // failed because no resource data
+                    
 
                     expand_button.visual.Text = "-";
                     is_opened = true;
