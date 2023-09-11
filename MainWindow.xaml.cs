@@ -31,6 +31,9 @@ namespace TagEditor
         public MainWindow()
         {
             InitializeComponent();
+
+            init_strings(); // optional, but loads all tagnames & unhashed stringID's, to make the system easier to navigate
+
             StateChanged += MainWindowStateChangeRaised;
 
             Active_TagExplorer = new(this); explorer_socket.Children.Add(Active_TagExplorer);

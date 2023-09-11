@@ -12,6 +12,7 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
+using static Infinite_module_test.tag_structs;
 
 namespace TagEditor.UI.Interfaces.Params
 {
@@ -42,7 +43,7 @@ namespace TagEditor.UI.Interfaces.Params
 
         private void loadValue()
         {
-            Valuebox.Text = BitConverter.ToString(parent_block[block_offset..(block_offset + 4)]).Replace("-", string.Empty);
+            Valuebox.Text = get_stringid(BitConverter.ToUInt32(parent_block[block_offset..(block_offset + 4)]));
         }
 
         private void Button_SaveValue(object sender, TextChangedEventArgs e)
@@ -52,9 +53,8 @@ namespace TagEditor.UI.Interfaces.Params
             else if (error_marker.Visibility != Visibility.Collapsed) error_marker.Visibility = Visibility.Collapsed;
         }
         private bool SaveValue()
-        { // write new value to array
-            try
-            {
+        { // write new value to array // TODO: we need to update this so that users can enter whatever string they want, and it'll hash it
+            try{
                 string hexstring = Valuebox.Text.Replace(" ", string.Empty);
                 if (hexstring.Length != (8)) return false;
                 // for the purpose of triggering an error, else we'd convert straight into the array
