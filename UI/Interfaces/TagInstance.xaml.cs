@@ -573,8 +573,10 @@ namespace TagEditor.UI.Windows{
                                 setup_struct_element(struct_link, param, current_line);
                                 theoretical_line += struct_link.total_contained_lines;
                             }continue;
-                        case 0x41: // _field_reference_v2
-                            break;
+                        case 0x41:{ // _field_reference_v2
+                                TagrefParam new_val = new(param_name, _struct.tag_data, offset, main.Active_TagExplorer);
+                                container.Children.Add(new_val);
+                            }continue;
                         case 0x42:{ // _field_data_v2
                                 DataParam new_val = new(param_name, _struct.tag_resource_refs[(ulong)offset], _struct.tag_data, offset, param_group_sizes[type]);
                                 container.Children.Add(new_val);
@@ -790,8 +792,11 @@ namespace TagEditor.UI.Windows{
                                 if (new_val.parent.is_opened)
                                     new_val.parent.expand(true);
                             }continue;
-                        case 0x41: // _field_reference_v2
-                            break;
+                        case 0x41:{ // _field_reference_v2
+                                TagrefParam? new_val = bobject as TagrefParam;
+                                Debug.Assert(new_val != null, "cast failed");
+                                new_val.reload(_struct.tag_data, offset);
+                           } continue;
                         case 0x42:{ // _field_data_v2
                                 DataParam? new_val = bobject as DataParam;
                                 Debug.Assert(new_val != null, "cast failed");

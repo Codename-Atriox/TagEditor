@@ -66,7 +66,7 @@ namespace TagEditor
         #endregion
 
         private HexViewer Active_HexViewer;
-        private TagExplorer Active_TagExplorer;
+        public TagExplorer Active_TagExplorer;
         private TagViewer Active_TagViewer;
 
         public string plugins_path = "C:\\Users\\Joe bingle\\Downloads\\plugins";

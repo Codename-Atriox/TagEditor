@@ -12,8 +12,9 @@ using System.Windows.Shapes;
 
 namespace TagEditor.UI.Windows{
     public class directory_item{
-        public directory_item(string n, bool i_f, List<directory_item>? c, bool i_m, string p, int i, module_structs.module? m){
+        public directory_item(string n, string a, bool i_f, List<directory_item>? c, bool i_m, string p, int i, module_structs.module? m){
             name = n;
+            alias = a;
             is_folder = i_f;
             children = c;
             is_module = i_m;
@@ -21,6 +22,7 @@ namespace TagEditor.UI.Windows{
             module_file_index = i;
             source_module = m;}
         public string name;
+        public string alias;
         public bool is_folder;
         // if folder than use this
         public List<directory_item>? children; // it would be a good idea to cache all child files & directories so we can calculate which items we're displaying to virtualize the list
@@ -53,9 +55,9 @@ namespace TagEditor.UI.Windows{
 
             List<directory_item> output = new();
             foreach (string file in System.IO.Directory.GetFiles(folder, "*", SearchOption.TopDirectoryOnly))
-                output.Add(new directory_item(System.IO.Path.GetFileName(file), false, null, false, file, -1, null));
+                output.Add(new directory_item(System.IO.Path.GetFileName(file), System.IO.Path.GetFileName(file), false, null, false, file, -1, null));
             foreach (string file in System.IO.Directory.GetDirectories(folder, "*", SearchOption.TopDirectoryOnly))
-                output.Add(new directory_item(System.IO.Path.GetFileName(file), true, recursive_folder_mapping(file), false, file, -1, null));
+                output.Add(new directory_item(System.IO.Path.GetFileName(file), System.IO.Path.GetFileName(file), true, recursive_folder_mapping(file), false, file, -1, null));
             return output;
         }
         public void OpenDirectory(bool clear_previous){
@@ -66,7 +68,7 @@ namespace TagEditor.UI.Windows{
                 if (clear_previous) Button_CloseDirectory(null, null); // only due of formality, else we'd have that single line
                 // configure the directory item, so we can parse it
 
-                directory_item folder = new directory_item(System.IO.Path.GetFileName(directory), true, recursive_folder_mapping(directory), false, directory, -1, null);
+                directory_item folder = new directory_item(System.IO.Path.GetFileName(directory), System.IO.Path.GetFileName(directory), true, recursive_folder_mapping(directory), false, directory, -1, null);
                 top_level_folders.Add(folder);
 
                 tag_view.Items.Add(CreateTreeDirectory(folder));
@@ -80,10 +82,10 @@ namespace TagEditor.UI.Windows{
                 // process all children into list
                 List<directory_item> group_files = new();
                 foreach (var file in list.Value) // List<module_structs.module.indexed_module_file>    
-                    group_files.Add(new directory_item(file.name, false, null, true, file.name, file.source_file_header_index, mod));
+                    group_files.Add(new directory_item(file.name, file.alias, false, null, true, file.name, file.source_file_header_index, mod));
                 
                 // then create folder
-                output.Add(new directory_item(list.Key, true, group_files, true, list.Key, -1, mod));
+                output.Add(new directory_item(list.Key, list.Key, true, group_files, true, list.Key, -1, mod));
             }
 
             return output;
@@ -97,7 +99,7 @@ namespace TagEditor.UI.Windows{
                 module_structs.module mod;
                 try{
                     mod = new module_structs.module(file);
-                    directory_item folder = new directory_item(System.IO.Path.GetFileName(file), true, module_folder_mapping(mod), true, file, -1, mod);
+                    directory_item folder = new directory_item(System.IO.Path.GetFileName(file), System.IO.Path.GetFileName(file), true, module_folder_mapping(mod), true, file, -1, mod);
                     top_level_folders.Add(folder);
                     if (clear_previous) Button_CloseDirectory(null, null); // only due of formality, else we'd have that single line
                     tag_view.Items.Add(CreateTreeDirectory(folder));
@@ -117,7 +119,7 @@ namespace TagEditor.UI.Windows{
                     if (clear_previous) Button_CloseDirectory(null, null); // only due of formality, else we'd have that single line
                     foreach(module_structs.module mod in modules){
                         try{
-                            directory_item folder = new directory_item(System.IO.Path.GetFileName(mod.module_file_path), true, module_folder_mapping(mod), true, file, -1, mod);
+                            directory_item folder = new directory_item(System.IO.Path.GetFileName(mod.module_file_path), System.IO.Path.GetFileName(mod.module_file_path), true, module_folder_mapping(mod), true, file, -1, mod);
                             top_level_folders.Add(folder);
                             tag_view.Items.Add(CreateTreeDirectory(folder));
                         } catch{main.DisplayNote("failed to open module: " + mod.module_file_path, null, MainWindow.error_level.WARNING);}
@@ -127,6 +129,38 @@ namespace TagEditor.UI.Windows{
 
                 } catch{main.DisplayNote("failed to open module: " + file, null, MainWindow.error_level.WARNING);}
         }}
+
+        public void try_open_tag(string tagname, string tagIDname) {
+            if (tagIDname == "FFFFFFFF")
+            {
+                main.DisplayNote("this tag reference is null.", null, MainWindow.error_level.NOTE);
+                return;
+            }
+            foreach (var v in top_level_folders){
+                if (recurse_try_open_tag(v, tagname, tagIDname))
+                    return;
+            }
+
+            main.DisplayNote("could not find file: " + tagname + ", maybe try opening a .mapinfo file?", null, MainWindow.error_level.WARNING);
+        }
+        private bool recurse_try_open_tag(directory_item folder, string tagname, string tagIDname){
+            foreach(var v in folder.children){
+                if (v.is_folder){
+                    if (recurse_try_open_tag(v, tagname, tagIDname))
+                        return true;
+                } 
+                else if (tagIDname == v.name) 
+                {
+                    // then open the tag, and return true
+                    if (v.is_module) // handle module file
+                        main.TagViewer_OpenModuleTag(v);
+                    else // handle as regular disk file
+                        main.TagViewer_OpenTag(v.path);
+                    return true;
+                }
+            }
+            return false;
+        }
 
         public void TreeViewItem_Expanded(object sender, RoutedEventArgs e){
             TreeViewItem item = e.Source as TreeViewItem;
@@ -174,13 +208,13 @@ namespace TagEditor.UI.Windows{
         }
         private TreeViewItem CreateTreeDir(directory_item dir){
             TreeViewItem item = new TreeViewItem();
-            item.Header = dir.name;
+            item.Header = dir.alias;
             item.Tag = dir;
             return item;
         }
         private TreeViewItem CreateTreeFile(directory_item dir){
             TreeViewItem item = new TreeViewItem();
-            item.Header = dir.name;
+            item.Header = dir.alias;
             item.HeaderTemplate = fileTemplate;
             item.Tag = dir;
             return item;
@@ -207,7 +241,13 @@ namespace TagEditor.UI.Windows{
         private void Button_OpenMapInfo(object sender, RoutedEventArgs e) => OpenMapinfo(true);
         private void Button_AddMapInfo(object sender, RoutedEventArgs e) => OpenMapinfo(false);
 
-        private void Button_CloseDirectory(object sender, RoutedEventArgs e) => tag_view.Items.Clear();
+        private void Button_CloseDirectory(object sender, RoutedEventArgs e){
+            tag_view.Items.Clear();
+            top_level_folders.Clear();
+
+
+        }
+
 
         private void Toggle_ShowResources(object sender, RoutedEventArgs e) => Recurs_ToggleResources(tag_view.Items);
         private void Recurs_ToggleResources(ItemCollection items){
