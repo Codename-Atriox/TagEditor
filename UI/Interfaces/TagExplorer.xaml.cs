@@ -104,6 +104,29 @@ namespace TagEditor.UI.Windows{
 
                 } catch{main.DisplayNote("failed to open module: " + file, null, MainWindow.error_level.WARNING);}
         }}
+        public void OpenMapinfo(bool clear_previous){
+            Microsoft.Win32.OpenFileDialog openFileDialog = new Microsoft.Win32.OpenFileDialog();
+            var result = openFileDialog.ShowDialog();
+            string file = openFileDialog.FileName;
+            if ((result == true) && (!string.IsNullOrWhiteSpace(file)) && File.Exists(file)){
+                // then open the selected mapinfo
+                try{
+                    if (!file.EndsWith(".mapinfo")) throw new Exception("file is likely not a mapinfo file!");
+
+                    List<module_structs.module> modules = MapInfo.open_mapinfo(file);
+                    if (clear_previous) Button_CloseDirectory(null, null); // only due of formality, else we'd have that single line
+                    foreach(module_structs.module mod in modules){
+                        try{
+                            directory_item folder = new directory_item(System.IO.Path.GetFileName(mod.module_file_path), true, module_folder_mapping(mod), true, file, -1, mod);
+                            top_level_folders.Add(folder);
+                            tag_view.Items.Add(CreateTreeDirectory(folder));
+                        } catch{main.DisplayNote("failed to open module: " + mod.module_file_path, null, MainWindow.error_level.WARNING);}
+
+                    }
+
+
+                } catch{main.DisplayNote("failed to open module: " + file, null, MainWindow.error_level.WARNING);}
+        }}
 
         public void TreeViewItem_Expanded(object sender, RoutedEventArgs e){
             TreeViewItem item = e.Source as TreeViewItem;
@@ -181,6 +204,8 @@ namespace TagEditor.UI.Windows{
         private void Button_AddDirectory(object sender, RoutedEventArgs e) => OpenDirectory(false);
         private void Button_OpenModule(object sender, RoutedEventArgs e) => OpenModule(true);
         private void Button_AddModule(object sender, RoutedEventArgs e) => OpenModule(false);
+        private void Button_OpenMapInfo(object sender, RoutedEventArgs e) => OpenMapinfo(true);
+        private void Button_AddMapInfo(object sender, RoutedEventArgs e) => OpenMapinfo(false);
 
         private void Button_CloseDirectory(object sender, RoutedEventArgs e) => tag_view.Items.Clear();
 
