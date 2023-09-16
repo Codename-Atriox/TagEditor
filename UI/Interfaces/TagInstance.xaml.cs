@@ -802,9 +802,15 @@ namespace TagEditor.UI.Windows{
                                 Debug.Assert(new_val != null, "cast failed");
                                 new_val.reload(param_name, _struct.tag_resource_refs[(ulong)offset], _struct.tag_data, offset, param_group_sizes[type]);
                             }continue;
-                        case 0x43:{ // tag_resource
+                        case 0x43:{ // tag_resource // FYI, this is broken & it just constantly loads the same resource struct over & over again
                                 ResourceParam? new_val = bobject as ResourceParam;
                                 Debug.Assert(new_val != null, "cast failed");
+                                if (!_struct.tag_block_refs.ContainsKey((ulong)offset)){
+                                    // if its already open, then close it
+                                    if (new_val.parent.is_opened)
+                                        new_val.parent.expand(false);
+                                    continue;
+                                }
                                 new_val.reload(_struct.tag_block_refs[(ulong)offset]);
                                 theoretical_line += new_val.parent.total_contained_lines;
                                 // then process children //
