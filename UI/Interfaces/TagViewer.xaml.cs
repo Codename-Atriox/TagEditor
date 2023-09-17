@@ -144,11 +144,17 @@ namespace TagEditor.UI.Windows{
             tag test = new tag(plugins_path, resource_list);
             try{
                 byte[] tagbytes = item.source_module.get_tag_bytes(item.module_file_index);
+                File.WriteAllBytes("C:\\Users\\Joe bingle\\Downloads\\tag testing\\og.file", tagbytes);
                 if (!test.Load_tag_file(tagbytes)){
                     main.DisplayNote(item.name + " was not able to be loaded as a tag", null, error_level.WARNING);
                     return;
             }} catch{ 
                 main.DisplayNote(item.name + " returned an error (likely due to file read attempt)", null, error_level.WARNING);}
+
+            byte[] testoutput = test.compile();
+            File.WriteAllBytes("C:\\Users\\Joe bingle\\Downloads\\tag testing\\recompiled.file", testoutput);
+
+
 
             // load new tag tab here
             TabItem new_tag = new();
