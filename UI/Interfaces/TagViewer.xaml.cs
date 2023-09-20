@@ -142,18 +142,26 @@ namespace TagEditor.UI.Windows{
             // + for some reason we are failing to read resources
 
             tag test = new tag(plugins_path, resource_list);
+            byte[] tagbytes = null;
             try{
-                byte[] tagbytes = item.source_module.get_tag_bytes(item.module_file_index);
-                File.WriteAllBytes("C:\\Users\\Joe bingle\\Downloads\\tag testing\\og.file", tagbytes);
+                tagbytes = item.source_module.get_tag_bytes(item.module_file_index);
                 if (!test.Load_tag_file(tagbytes)){
                     main.DisplayNote(item.name + " was not able to be loaded as a tag", null, error_level.WARNING);
                     return;
             }} catch{ 
-                main.DisplayNote(item.name + " returned an error (likely due to file read attempt)", null, error_level.WARNING);}
+                main.DisplayNote(item.name + " returned an error (likely due to file read attempt)", null, error_level.WARNING); return;}
 
-            byte[] testoutput = test.compile();
-            File.WriteAllBytes("C:\\Users\\Joe bingle\\Downloads\\tag testing\\recompiled.file", testoutput);
+            //DEBUG
+            // write original tag to file & resources too
+            File.WriteAllBytes("C:\\Users\\Joe bingle\\Downloads\\tag testing\\og", tagbytes);
+            for (int i = 0; i < resource_list.Count; i++)
+                File.WriteAllBytes("C:\\Users\\Joe bingle\\Downloads\\tag testing\\og_res_" + i, resource_list[i].Key);
 
+            tag.compiled_tag testoutput = test.compile();
+            File.WriteAllBytes("C:\\Users\\Joe bingle\\Downloads\\tag testing\\recompiled", testoutput.tag_bytes);
+            for (int i = 0; i < testoutput.resource_bytes.Count; i++)
+                File.WriteAllBytes("C:\\Users\\Joe bingle\\Downloads\\tag testing\\recompiled_res_" + i, testoutput.resource_bytes[i]);
+            
 
 
             // load new tag tab here
