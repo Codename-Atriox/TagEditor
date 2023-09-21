@@ -153,14 +153,14 @@ namespace TagEditor.UI.Windows{
 
             //DEBUG
             // write original tag to file & resources too
-            File.WriteAllBytes("C:\\Users\\Joe bingle\\Downloads\\tag testing\\og", tagbytes);
-            for (int i = 0; i < resource_list.Count; i++)
-                File.WriteAllBytes("C:\\Users\\Joe bingle\\Downloads\\tag testing\\og_res_" + i, resource_list[i].Key);
+            //File.WriteAllBytes("C:\\Users\\Joe bingle\\Downloads\\tag testing\\og", tagbytes);
+            //for (int i = 0; i < resource_list.Count; i++)
+            //    File.WriteAllBytes("C:\\Users\\Joe bingle\\Downloads\\tag testing\\og_res_" + i, resource_list[i].Key);
 
-            tag.compiled_tag testoutput = test.compile();
-            File.WriteAllBytes("C:\\Users\\Joe bingle\\Downloads\\tag testing\\recompiled", testoutput.tag_bytes);
-            for (int i = 0; i < testoutput.resource_bytes.Count; i++)
-                File.WriteAllBytes("C:\\Users\\Joe bingle\\Downloads\\tag testing\\recompiled_res_" + i, testoutput.resource_bytes[i]);
+            //tag.compiled_tag testoutput = test.compile();
+            //File.WriteAllBytes("C:\\Users\\Joe bingle\\Downloads\\tag testing\\recompiled", testoutput.tag_bytes);
+            //for (int i = 0; i < testoutput.resource_bytes.Count; i++)
+            //    File.WriteAllBytes("C:\\Users\\Joe bingle\\Downloads\\tag testing\\recompiled_res_" + i, testoutput.resource_bytes[i]);
             
 
 
