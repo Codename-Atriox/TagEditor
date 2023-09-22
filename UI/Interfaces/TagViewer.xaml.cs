@@ -116,7 +116,9 @@ namespace TagEditor.UI.Windows{
             // lets first get a list of all the resource file that this guy probably owns
             List<KeyValuePair<byte[], bool>> resource_list = new();
             try{ // idk why we have a try catch here
-                List<byte[]> resulting_resources = item.source_module.get_tag_resource_list(item.module_file_index);
+                if (item.module_file == null || item.source_module == null) throw new Exception("annoying get rid of null test");
+
+                List<byte[]> resulting_resources = item.source_module.get_tag_resource_list((Infinite_module_test.module_structs.module.unpacked_module_file)item.module_file);
                 foreach (byte[] resource in resulting_resources) {
 
                     bool is_standalone_resource = resource[0..4].SequenceEqual(new byte[] { 0x75, 0x63, 0x73, 0x68 }); // test for those 4 chars at the top of the file
@@ -144,7 +146,8 @@ namespace TagEditor.UI.Windows{
             tag test = new tag(plugins_path, resource_list);
             byte[] tagbytes = null;
             try{
-                tagbytes = item.source_module.get_tag_bytes(item.module_file_index);
+                if (item.module_file == null) throw new Exception("get rid of annoying green line test");
+                tagbytes = item.source_module.get_module_file_bytes((Infinite_module_test.module_structs.module.unpacked_module_file)item.module_file);
                 if (!test.Load_tag_file(tagbytes)){
                     main.DisplayNote(item.name + " was not able to be loaded as a tag", null, error_level.WARNING);
                     return;

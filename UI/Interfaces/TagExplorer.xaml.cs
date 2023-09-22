@@ -12,14 +12,14 @@ using System.Windows.Shapes;
 
 namespace TagEditor.UI.Windows{
     public class directory_item{
-        public directory_item(string n, string a, bool i_f, List<directory_item>? c, bool i_m, string p, int i, module_structs.module? m){
+        public directory_item(string n, string a, bool i_f, List<directory_item>? c, bool i_m, string p, module_structs.module.unpacked_module_file? m_f, module_structs.module? m){
             name = n;
             alias = a;
             is_folder = i_f;
             children = c;
             is_module = i_m;
             path = p;
-            module_file_index = i;
+            module_file = m_f;
             source_module = m;}
         public string name;
         public string alias;
@@ -30,7 +30,7 @@ namespace TagEditor.UI.Windows{
         public bool is_module;
         public string path; // used as literal path for non-modules, used as toplevel dictionary key for module folders
         // if module then use these
-        public int module_file_index;
+        public module_structs.module.unpacked_module_file? module_file;
         public module_structs.module? source_module;
     }
 
@@ -55,9 +55,9 @@ namespace TagEditor.UI.Windows{
 
             List<directory_item> output = new();
             foreach (string file in System.IO.Directory.GetFiles(folder, "*", SearchOption.TopDirectoryOnly))
-                output.Add(new directory_item(System.IO.Path.GetFileName(file), System.IO.Path.GetFileName(file), false, null, false, file, -1, null));
+                output.Add(new directory_item(System.IO.Path.GetFileName(file), System.IO.Path.GetFileName(file), false, null, false, file, null, null));
             foreach (string file in System.IO.Directory.GetDirectories(folder, "*", SearchOption.TopDirectoryOnly))
-                output.Add(new directory_item(System.IO.Path.GetFileName(file), System.IO.Path.GetFileName(file), true, recursive_folder_mapping(file), false, file, -1, null));
+                output.Add(new directory_item(System.IO.Path.GetFileName(file), System.IO.Path.GetFileName(file), true, recursive_folder_mapping(file), false, file, null, null));
             return output;
         }
         public void OpenDirectory(bool clear_previous){
@@ -68,7 +68,7 @@ namespace TagEditor.UI.Windows{
                 if (clear_previous) Button_CloseDirectory(null, null); // only due of formality, else we'd have that single line
                 // configure the directory item, so we can parse it
 
-                directory_item folder = new directory_item(System.IO.Path.GetFileName(directory), System.IO.Path.GetFileName(directory), true, recursive_folder_mapping(directory), false, directory, -1, null);
+                directory_item folder = new directory_item(System.IO.Path.GetFileName(directory), System.IO.Path.GetFileName(directory), true, recursive_folder_mapping(directory), false, directory, null, null);
                 top_level_folders.Add(folder);
 
                 tag_view.Items.Add(CreateTreeDirectory(folder));
@@ -82,10 +82,10 @@ namespace TagEditor.UI.Windows{
                 // process all children into list
                 List<directory_item> group_files = new();
                 foreach (var file in list.Value) // List<module_structs.module.indexed_module_file>    
-                    group_files.Add(new directory_item(file.name, file.alias, false, null, true, file.name, file.source_file_header_index, mod));
+                    group_files.Add(new directory_item(file.name, file.alias, false, null, true, file.name, file.file, mod));
                 
                 // then create folder
-                output.Add(new directory_item(list.Key, list.Key, true, group_files, true, list.Key, -1, mod));
+                output.Add(new directory_item(list.Key, list.Key, true, group_files, true, list.Key, null, mod));
             }
 
             return output;
@@ -99,7 +99,7 @@ namespace TagEditor.UI.Windows{
                 module_structs.module mod;
                 try{
                     mod = new module_structs.module(file);
-                    directory_item folder = new directory_item(System.IO.Path.GetFileName(file), System.IO.Path.GetFileName(file), true, module_folder_mapping(mod), true, file, -1, mod);
+                    directory_item folder = new directory_item(System.IO.Path.GetFileName(file), System.IO.Path.GetFileName(file), true, module_folder_mapping(mod), true, file, null, mod);
                     top_level_folders.Add(folder);
                     if (clear_previous) Button_CloseDirectory(null, null); // only due of formality, else we'd have that single line
                     tag_view.Items.Add(CreateTreeDirectory(folder));
@@ -119,7 +119,7 @@ namespace TagEditor.UI.Windows{
                     if (clear_previous) Button_CloseDirectory(null, null); // only due of formality, else we'd have that single line
                     foreach(module_structs.module mod in modules){
                         try{
-                            directory_item folder = new directory_item(System.IO.Path.GetFileName(mod.module_file_path), System.IO.Path.GetFileName(mod.module_file_path), true, module_folder_mapping(mod), true, file, -1, mod);
+                            directory_item folder = new directory_item(System.IO.Path.GetFileName(mod.module_file_path), System.IO.Path.GetFileName(mod.module_file_path), true, module_folder_mapping(mod), true, file, null, mod);
                             top_level_folders.Add(folder);
                             tag_view.Items.Add(CreateTreeDirectory(folder));
                         } catch{main.DisplayNote("failed to open module: " + mod.module_file_path, null, MainWindow.error_level.WARNING);}
