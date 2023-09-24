@@ -144,10 +144,10 @@ namespace TagEditor.UI.Windows{
             // + for some reason we are failing to read resources
 
             tag test = new tag(plugins_path, resource_list);
-            byte[] tagbytes = null;
+            byte[]? tagbytes = null;
             try{
                 if (item.module_file == null) throw new Exception("get rid of annoying green line test");
-                tagbytes = item.source_module.get_module_file_bytes((Infinite_module_test.module_structs.module.unpacked_module_file)item.module_file);
+                tagbytes = item.source_module.get_module_file_bytes(item.module_file);
                 if (!test.Load_tag_file(tagbytes)){
                     main.DisplayNote(item.name + " was not able to be loaded as a tag", null, error_level.WARNING);
                     return;
