@@ -92,7 +92,15 @@
                 <ColumnDefinition Width="350"/>
                 <ColumnDefinition Width="3*"/>
             </Grid.ColumnDefinitions>
-            <Grid x:Name="explorer_socket"/>
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="*"/>
+                    <RowDefinition Height="100"/>
+                    </Grid.RowDefinitions>
+                <Grid x:Name="explorer_socket" Grid.Row="0"/>
+                <GridSplitter  Height="5" Background="Transparent" VerticalAlignment="Bottom" HorizontalAlignment="Stretch"/>
+                <Grid x:Name="module_socket" Grid.Row="1"/>
+                </Grid>
             <GridSplitter Width="5" Background="Transparent"/>
             <Grid x:Name="tag_socket" Grid.Column="1"/>
         </Grid>

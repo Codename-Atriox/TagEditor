@@ -40,6 +40,7 @@ namespace TagEditor.UI.Windows{
 
         // structs used to map out directory structures
         List<directory_item> top_level_folders = new();
+        List<module_structs.module> open_modules = new();
 
         public TagExplorer(MainWindow _main){
             main = _main;
@@ -102,6 +103,9 @@ namespace TagEditor.UI.Windows{
                     directory_item folder = new directory_item(System.IO.Path.GetFileName(file), System.IO.Path.GetFileName(file), true, module_folder_mapping(mod), true, file, null, mod);
                     top_level_folders.Add(folder);
                     if (clear_previous) Button_CloseDirectory(null, null); // only due of formality, else we'd have that single line
+                    open_modules.Add(mod);
+                    main.TagViewer_UpdateModules(open_modules);
+                    // call a refresh on the module viewer window
                     tag_view.Items.Add(CreateTreeDirectory(folder));
 
                 } catch{main.DisplayNote("failed to open module: " + file, null, MainWindow.error_level.WARNING);}
@@ -121,6 +125,7 @@ namespace TagEditor.UI.Windows{
                         try{
                             directory_item folder = new directory_item(System.IO.Path.GetFileName(mod.module_file_path), System.IO.Path.GetFileName(mod.module_file_path), true, module_folder_mapping(mod), true, file, null, mod);
                             top_level_folders.Add(folder);
+                            open_modules.Add(mod);
                             tag_view.Items.Add(CreateTreeDirectory(folder));
                         } catch{main.DisplayNote("failed to open module: " + mod.module_file_path, null, MainWindow.error_level.WARNING);}
 
@@ -128,6 +133,7 @@ namespace TagEditor.UI.Windows{
 
 
                 } catch{main.DisplayNote("failed to open module: " + file, null, MainWindow.error_level.WARNING);}
+                main.TagViewer_UpdateModules(open_modules);
         }}
 
         public void try_open_tag(string tagname, string tagIDname) {
@@ -244,7 +250,9 @@ namespace TagEditor.UI.Windows{
         private void Button_CloseDirectory(object sender, RoutedEventArgs e){
             tag_view.Items.Clear();
             top_level_folders.Clear();
-
+            // update module viewer window
+            open_modules.Clear();
+            main.TagViewer_UpdateModules(open_modules);
 
         }
 
