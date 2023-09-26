@@ -977,7 +977,19 @@ namespace TagEditor.UI.Windows{
             0,   // _3B // end of struct
         };
 
+        struct param_diff{
+            string original_value;
+            string updated_value;
+            int line_index;
+            int type;
+            UIElement param_ui;
+        }
+        List<param_diff> diffs = new();
 
+        public void set_diff(UIElement element, string param_name, int param_type, string original, string updated, int line_index)
+        {
+            // check to see if we already have this guy for the diff
+        }
 
         // these should all be correct except for the unknown/unlabelled ones
         public static short[] param_group_sizes = new short[]

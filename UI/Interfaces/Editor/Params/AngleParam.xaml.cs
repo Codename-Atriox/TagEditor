@@ -14,16 +14,17 @@ using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
 using System.Xml.Linq;
+using TagEditor.UI.Windows;
 
-namespace TagEditor.UI.Interfaces.Params
-{
+namespace TagEditor.UI.Interfaces.Params{
     /// <summary>
     /// Interaction logic for AngleParam.xaml
     /// </summary>
-    public partial class AngleParam : UserControl
-    {
-        public AngleParam(string name, byte[] _parent_block, int _block_offset)
-        {
+    public partial class AngleParam : UserControl{
+        public AngleParam(TagInstance _callback, int _param_type, int _line_index, string name, byte[] _parent_block, int _block_offset){
+            callback = _callback;
+            line_index = _line_index;
+            param_type = _param_type;
             parent_block = _parent_block;
             block_offset = _block_offset;
             InitializeComponent();
@@ -47,20 +48,32 @@ namespace TagEditor.UI.Interfaces.Params
             double radians = BitConverter.ToSingle(parent_block[block_offset..(block_offset + 4)]);
             radians *= 180 / Math.PI; // convert to degrees
             Valuebox.Text = ((float)radians).ToString();
+            // store og value
+            if (og_value == null) og_value = radians;
         }
 
         private void Button_SaveValue(object sender, TextChangedEventArgs e){
             if (is_setting_up) return;
-            if (!SaveValue()) error_marker.Visibility = Visibility.Visible;
-            else if (error_marker.Visibility != Visibility.Collapsed) error_marker.Visibility = Visibility.Collapsed;
+            try{SetValue(Convert.ToDouble(Valuebox.Text));
+                callback.set_diff(this, Namebox.Text, param_type, og_value.ToString(), Valuebox.Text, line_index);
+            }catch { 
+                error_marker.Visibility = Visibility.Visible;
+        }}
+        private void SetValue(double value){
+            value *= Math.PI / 180;
+            byte[] bytes = BitConverter.GetBytes((float)value);
+            bytes.CopyTo(parent_block, block_offset);
+            if (error_marker.Visibility != Visibility.Collapsed) error_marker.Visibility = Visibility.Collapsed;
         }
-        private bool SaveValue(){ // write angle to array
-            try{double value = Convert.ToDouble(Valuebox.Text);
-                value *= Math.PI / 180;
-                byte[] bytes = BitConverter.GetBytes((float)value);
-                bytes.CopyTo(parent_block, block_offset);
-                return true;
-            }catch { return false; }
+        // diff'ing stuff
+        TagInstance callback;
+        int line_index;
+        int param_type;
+        double? og_value; // note that this will not always be the actual OG value
+        public void revertValue(double og){
+            SetValue(og);
         }
+        // we need to implement a static system so we can call this even when the item doesn't exist, and we need a system to unhook & rehook to ui parameters
+
     }
 }

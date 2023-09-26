@@ -12,10 +12,14 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
+using TagEditor.UI.Windows;
 
 namespace TagEditor.UI.Interfaces.Params{
     public partial class DoubleangleParam : UserControl{
-        public DoubleangleParam(string name, byte[] _parent_block, int _block_offset){
+        public DoubleangleParam(TagInstance _callback, int _param_type, int _line_index, string name, byte[] _parent_block, int _block_offset){
+            callback = _callback;
+            line_index = _line_index;
+            param_type = _param_type;
             parent_block = _parent_block;
             block_offset = _block_offset;
             InitializeComponent();
@@ -38,25 +42,43 @@ namespace TagEditor.UI.Interfaces.Params{
             double radians = BitConverter.ToSingle(parent_block[block_offset..(block_offset + 4)]);
             radians *= 180 / Math.PI;
             Valuebox1.Text = ((float)radians).ToString();
+            if (og_value1 == null) og_value1 = radians;
             radians        = BitConverter.ToSingle(parent_block[(block_offset + 4)..(block_offset + 8)]);
             radians *= 180 / Math.PI;
             Valuebox2.Text = ((float)radians).ToString();
+            if (og_value2 == null) og_value2 = radians;
         }
 
-        private void Button1_SaveValue(object sender, TextChangedEventArgs e) => Button_SaveValue(Valuebox1, error_marker1, 0);
-        private void Button2_SaveValue(object sender, TextChangedEventArgs e) => Button_SaveValue(Valuebox2, error_marker2, 4);
-        private void Button_SaveValue(TextBox field, Separator error_marker, int offset){
+        private void Button1_SaveValue(object sender, TextChangedEventArgs e) => Button_SaveValue();
+        private void Button2_SaveValue(object sender, TextChangedEventArgs e) => Button_SaveValue();
+        private void Button_SaveValue(){
             if (is_setting_up) return;
-            if (!SaveValue(field, offset)) error_marker.Visibility = Visibility.Visible;
-            else if (error_marker.Visibility != Visibility.Collapsed) error_marker.Visibility = Visibility.Collapsed;
+            double value1;
+            double value2;
+            try{value1 = Convert.ToDouble(Valuebox1.Text);
+            }catch{error_marker1.Visibility = Visibility.Visible;return;}
+            try{value2 = Convert.ToDouble(Valuebox2.Text);
+            }catch{error_marker2.Visibility = Visibility.Visible;return; }
+            // we can only set values & submit the diff if both values passed
+            SetValue(value1, 0, error_marker1);
+            SetValue(value2, 4, error_marker2);
+            callback.set_diff(this, Namebox.Text, param_type, og_value1.ToString() + ", " + og_value2.ToString(), value1.ToString() + ", " + value2.ToString(), line_index);
         }
-        private bool SaveValue(TextBox field, int offset){ // write string to array
-            try{double value = Convert.ToDouble(field.Text);
-                value *= Math.PI / 180;
-                byte[] bytes = BitConverter.GetBytes((float)value);
-                bytes.CopyTo(parent_block, block_offset+ offset);
-                return true;
-            }catch { return false; }
+        private void SetValue(double value, int offset, Separator error_marker){ // write string to array
+            value *= Math.PI / 180;
+            byte[] bytes = BitConverter.GetBytes((float)value);
+            bytes.CopyTo(parent_block, block_offset+ offset);
+            if (error_marker.Visibility != Visibility.Collapsed) error_marker.Visibility = Visibility.Collapsed;
+        }
+        // diff'ing stuff
+        TagInstance callback;
+        int line_index;
+        int param_type;
+        double? og_value1; // note that this will not always be the actual OG value
+        double? og_value2;
+        public void revertValue(double og1, double og2){
+            SetValue(og1, 0, error_marker1);
+            SetValue(og2, 4, error_marker2);
         }
     }
 }
