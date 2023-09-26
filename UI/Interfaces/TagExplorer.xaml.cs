@@ -100,7 +100,7 @@ namespace TagEditor.UI.Windows{
                 module_structs.module mod;
                 try{
                     mod = new module_structs.module(file);
-                    directory_item folder = new directory_item(System.IO.Path.GetFileName(file), System.IO.Path.GetFileName(file), true, module_folder_mapping(mod), true, file, null, mod);
+                    directory_item folder = new directory_item(mod.module_name, mod.module_name, true, module_folder_mapping(mod), true, file, null, mod);
                     top_level_folders.Add(folder);
                     if (clear_previous) Button_CloseDirectory(null, null); // only due of formality, else we'd have that single line
                     open_modules.Add(mod);
@@ -123,7 +123,7 @@ namespace TagEditor.UI.Windows{
                     if (clear_previous) Button_CloseDirectory(null, null); // only due of formality, else we'd have that single line
                     foreach(module_structs.module mod in modules){
                         try{
-                            directory_item folder = new directory_item(System.IO.Path.GetFileName(mod.module_file_path), System.IO.Path.GetFileName(mod.module_file_path), true, module_folder_mapping(mod), true, file, null, mod);
+                            directory_item folder = new directory_item(mod.module_name, mod.module_name, true, module_folder_mapping(mod), true, file, null, mod);
                             top_level_folders.Add(folder);
                             open_modules.Add(mod);
                             tag_view.Items.Add(CreateTreeDirectory(folder));

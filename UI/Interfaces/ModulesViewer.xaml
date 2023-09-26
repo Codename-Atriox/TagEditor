@@ -19,18 +19,16 @@
                 <Button Content="Un" Width="20" ToolTip="Unpack the contents of a module file" Click="Button_UnpackModule"/>
                 <Button Content="Ad" Width="20" ToolTip="Add/Import tag into loaded Module file tags" Click="Button_AddTag"/>
                 <Button Content="Cm" Width="20" ToolTip="Compile Selected Module file" Click="Button_CompileModule"/>
+                <Button Content="Cy" ToolTip="Copy module header info to clipboard" Click="Button_CopyModule"/>
                 <Separator Width="1" Height="15" Style="{StaticResource {x:Static ToolBar.SeparatorStyleKey}}" Background="#FF3D3D3D" Margin="4,2,4,2" />
-                <TextBlock x:Name="files_count" Text="Files: NULL" Foreground="#FF9C9C9C" Margin="0,2,0,0"/>
+                <TextBlock x:Name="files_count" Text="Files: NULL" Foreground="#FF9C9C9C" Margin="0,3,0,0"/>
                 <Separator Width="1" Height="15" Style="{StaticResource {x:Static ToolBar.SeparatorStyleKey}}" Background="#FF3D3D3D" Margin="4,2,4,2" />
-                <TextBlock x:Name="resources_count" Text="Resources: NULL" Foreground="#FF9C9C9C" Margin="0,2,0,0"/>
-                <Separator Width="1" Height="15" Style="{StaticResource {x:Static ToolBar.SeparatorStyleKey}}" Background="#FF3D3D3D" Margin="4,2,4,2" />
-                <Button Content="Copy Info" ToolTip="Compile Selected Module file" Click="Button_CompileModule"/>
+                <TextBlock x:Name="changes_count" Text="Tags Committed: NULL" Foreground="#FF9C9C9C" Margin="0,3,0,0"/>
             </StackPanel>
             <ScrollViewer Grid.Row="2">
-                <ListBox x:Name="modulesview" Background="{x:Null}" BorderBrush="{x:Null}" SelectionChanged="modulesview_SelectionChanged" Foreground="#FFD0D0D0">
-                    <ListViewItem Content="test1"/>
-                    <ListViewItem Content="test2"/>
-                </ListBox>
+                <ListView x:Name="modulesview" Background="{x:Null}" BorderBrush="{x:Null}" SelectionChanged="modulesview_SelectionChanged" Foreground="#FFD0D0D0">
+
+                </ListView>
             </ScrollViewer>
         </Grid>
     </Border>
