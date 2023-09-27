@@ -12,10 +12,14 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
+using TagEditor.UI.Windows;
 
 namespace TagEditor.UI.Interfaces.Params{
     public partial class StringParam : UserControl{
-        public StringParam(string name, byte[] _parent_block, int _block_offset, short _length){
+        public StringParam(TagInstance _callback, int _param_type, int _line_index, string name, byte[] _parent_block, int _block_offset, short _length){
+            callback = _callback;
+            line_index = _line_index;
+            param_type = _param_type;
             parent_block = _parent_block;
             block_offset = _block_offset;
             length = _length;
@@ -39,20 +43,42 @@ namespace TagEditor.UI.Interfaces.Params{
 
         private void loadValue(){
             Valuebox.Text = Encoding.UTF8.GetString(parent_block, block_offset, length);
+            if (og_value == null) og_value = Valuebox.Text;
         }
 
+
+        
         private void Button_SaveValue(object sender, TextChangedEventArgs e){
             if (is_setting_up) return;
-            if (!SaveValue()) error_marker.Visibility = Visibility.Visible;
-            else if (error_marker.Visibility != Visibility.Collapsed) error_marker.Visibility = Visibility.Collapsed;
+            // the exception is put into the setvalue function
+            try{SetValue(this, Valuebox, error_marker, Valuebox.Text, length, parent_block, block_offset);
+                callback.set_diff(this, Namebox.Text, param_type, og_value, Valuebox.Text, line_index, parent_block, block_offset);
+            }catch { 
+                error_marker.Visibility = Visibility.Visible;
+        }}
+        private static void SetValue(StringParam? target, TextBox? source, Separator? error, string value, int length, byte[] block, int offset){
+            if (value.Length > length) throw new Exception("value string was too long to fit into buffer");
+            byte[] bytes = new byte[length];
+            for (int i = 0; i < value.Length; i++) bytes[i] = (byte)value[i];
+            // update UI element if it exists
+            if (target != null){
+                target.is_setting_up = true;
+                source.Text = value;
+                if (error.Visibility != Visibility.Collapsed) error.Visibility = Visibility.Collapsed;
+                target.is_setting_up = false;
+            }
+            bytes.CopyTo(block, offset);
         }
-        private bool SaveValue(){ // write string to array
-            try{byte[] bytes = new byte[length];
-                if (Valuebox.Text.Length > length) return false;
-                for (int i = 0; i < Valuebox.Text.Length; i++) bytes[i] = (byte)Valuebox.Text[i];
-                for (int i = 0; i < length; i++) parent_block[i + block_offset] = bytes[i];
-                return true;
-            }catch { return false; }
+        // diff'ing stuff
+        TagInstance callback;
+        int line_index;
+        int param_type;
+        string? og_value; // note that this will not always be the actual OG value
+        public static void revert_value(string old_value, int string_length, StringParam? target, byte[] block, int offset){
+            if (target != null){
+                target.og_value = old_value;
+                SetValue(target, target.Valuebox, target.error_marker, old_value, string_length, block, offset);
+            }else SetValue(null, null, null, old_value, string_length, block, offset);
         }
     }
 }

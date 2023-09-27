@@ -42,11 +42,10 @@ namespace TagEditor.UI.Interfaces.Params{
             double radians = BitConverter.ToSingle(parent_block[block_offset..(block_offset + 4)]);
             radians *= 180 / Math.PI;
             Valuebox1.Text = ((float)radians).ToString();
-            if (og_value1 == null) og_value1 = radians;
             radians        = BitConverter.ToSingle(parent_block[(block_offset + 4)..(block_offset + 8)]);
             radians *= 180 / Math.PI;
             Valuebox2.Text = ((float)radians).ToString();
-            if (og_value2 == null) og_value2 = radians;
+            if (og_value == null) og_value = Valuebox1.Text + ", " + Valuebox2.Text;
         }
 
         private void Button1_SaveValue(object sender, TextChangedEventArgs e) => Button_SaveValue();
@@ -60,25 +59,37 @@ namespace TagEditor.UI.Interfaces.Params{
             try{value2 = Convert.ToDouble(Valuebox2.Text);
             }catch{error_marker2.Visibility = Visibility.Visible;return; }
             // we can only set values & submit the diff if both values passed
-            SetValue(value1, 0, error_marker1);
-            SetValue(value2, 4, error_marker2);
-            callback.set_diff(this, Namebox.Text, param_type, og_value1.ToString() + ", " + og_value2.ToString(), value1.ToString() + ", " + value2.ToString(), line_index);
+            SetValue(this, Valuebox1, error_marker1, value1, parent_block, block_offset);
+            SetValue(this, Valuebox2, error_marker2, value2, parent_block, block_offset+4);
+            callback.set_diff(this, Namebox.Text, param_type, og_value, value1.ToString() + ", " + value2.ToString(), line_index, parent_block, block_offset);
         }
-        private void SetValue(double value, int offset, Separator error_marker){ // write string to array
+        private static void SetValue(DoubleangleParam? target, TextBox? source, Separator? error, double value, byte[] block, int offset){
+            // update UI element if it exists
+            if (target != null){
+                target.is_setting_up = true;
+                source.Text = ((float)value).ToString();
+                if (error.Visibility != Visibility.Collapsed) error.Visibility = Visibility.Collapsed;
+                target.is_setting_up = false;
+            }
             value *= Math.PI / 180;
             byte[] bytes = BitConverter.GetBytes((float)value);
-            bytes.CopyTo(parent_block, block_offset+ offset);
-            if (error_marker.Visibility != Visibility.Collapsed) error_marker.Visibility = Visibility.Collapsed;
+            bytes.CopyTo(block, offset);
         }
         // diff'ing stuff
         TagInstance callback;
         int line_index;
         int param_type;
-        double? og_value1; // note that this will not always be the actual OG value
-        double? og_value2;
-        public void revertValue(double og1, double og2){
-            SetValue(og1, 0, error_marker1);
-            SetValue(og2, 4, error_marker2);
+        string? og_value; // note that this will not always be the actual OG value
+        public static void revert_value(string old_value, DoubleangleParam? target, byte[] block, int offset){
+            string[] values = old_value.Split(", ");
+            if (target != null){
+                target.og_value = old_value;
+                SetValue(target, target.Valuebox1, target.error_marker1, Convert.ToDouble(values[0]), block, offset);
+                SetValue(target, target.Valuebox2, target.error_marker2, Convert.ToDouble(values[1]), block, offset+4);
+            } else {
+                SetValue(null, null, null, Convert.ToDouble(values[0]), block, offset);
+                SetValue(null, null, null, Convert.ToDouble(values[1]), block, offset+4);
+            }
         }
     }
 }

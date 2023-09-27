@@ -982,13 +982,27 @@ namespace TagEditor.UI.Windows{
             string updated_value;
             int line_index;
             int type;
-            UIElement param_ui;
+            UIElement? param_ui;
+            byte[] block;
+            int offset;
         }
         List<param_diff> diffs = new();
 
-        public void set_diff(UIElement element, string param_name, int param_type, string original, string updated, int line_index)
+        public void set_diff(UIElement element, string param_name, int param_type, string original, string updated, int line_index, byte[] block, int block_offset)
         {
             // check to see if we already have this guy for the diff
+            // if we do, we can ignore most of the information as it may no longer be correct, opposed to the original information that we recieved
+
+        }
+        // we need to iterate through all child params before deleting them
+        // so we unhook their references, allowing them to be garbage collected
+        public void unhook_diff(UIElement element)
+        {
+
+        }
+        public void try_unhooking_children_before_clearing()
+        {
+
         }
 
         // these should all be correct except for the unknown/unlabelled ones

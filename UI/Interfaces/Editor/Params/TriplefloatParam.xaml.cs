@@ -12,15 +12,17 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
+using TagEditor.UI.Windows;
 
-namespace TagEditor.UI.Interfaces.Params
-{
+namespace TagEditor.UI.Interfaces.Params{
     /// <summary>
     /// Interaction logic for TriplefloatParam.xaml
     /// </summary>
-    public partial class TriplefloatParam : UserControl
-    {
-        public TriplefloatParam(string name, byte[] _parent_block, int _block_offset){
+    public partial class TriplefloatParam : UserControl{
+        public TriplefloatParam(TagInstance _callback, int _param_type, int _line_index, string name, byte[] _parent_block, int _block_offset){
+            callback = _callback;
+            line_index = _line_index;
+            param_type = _param_type;
             parent_block = _parent_block;
             block_offset = _block_offset;
             InitializeComponent();
@@ -44,23 +46,59 @@ namespace TagEditor.UI.Interfaces.Params
             Valuebox1.Text = BitConverter.ToSingle(parent_block[block_offset..(block_offset + 4)]).ToString();
             Valuebox2.Text = BitConverter.ToSingle(parent_block[(block_offset + 4)..(block_offset + 8)]).ToString();
             Valuebox3.Text = BitConverter.ToSingle(parent_block[(block_offset + 8)..(block_offset + 12)]).ToString();
+            if (og_value == null) og_value = Valuebox1.Text + ", " + Valuebox2.Text + ", " + Valuebox3.Text;
         }
 
-        private void Button1_SaveValue(object sender, TextChangedEventArgs e) => Button_SaveValue(Valuebox1, error_marker1, 0);
-        private void Button2_SaveValue(object sender, TextChangedEventArgs e) => Button_SaveValue(Valuebox2, error_marker2, 4);
-        private void Button3_SaveValue(object sender, TextChangedEventArgs e) => Button_SaveValue(Valuebox3, error_marker3, 8);
-        private void Button_SaveValue(TextBox field, Separator error_marker, int offset){
+        private void Button1_SaveValue(object sender, TextChangedEventArgs e) => Button_SaveValue();
+        private void Button2_SaveValue(object sender, TextChangedEventArgs e) => Button_SaveValue();
+        private void Button3_SaveValue(object sender, TextChangedEventArgs e) => Button_SaveValue();
+
+
+        private void Button_SaveValue(){
             if (is_setting_up) return;
-            if (!SaveValue(field, offset)) error_marker.Visibility = Visibility.Visible;
-            else if (error_marker.Visibility != Visibility.Collapsed) error_marker.Visibility = Visibility.Collapsed;
+            float value1;
+            float value2;
+            float value3;
+            try{value1 = Convert.ToSingle(Valuebox1.Text);
+            }catch { error_marker1.Visibility = Visibility.Visible; return; }
+            try{value2 = Convert.ToSingle(Valuebox2.Text);
+            }catch { error_marker2.Visibility = Visibility.Visible; return; }
+            try{value3 = Convert.ToSingle(Valuebox3.Text);
+            }catch { error_marker3.Visibility = Visibility.Visible; return; }
+            // we can only set values & submit the diff if both values passed
+            SetValue(this, Valuebox1, error_marker1, value1, parent_block, block_offset);
+            SetValue(this, Valuebox2, error_marker2, value2, parent_block, block_offset + 4);
+            SetValue(this, Valuebox3, error_marker3, value3, parent_block, block_offset + 8);
+            callback.set_diff(this, Namebox.Text, param_type, og_value, value1.ToString() + ", " + value2.ToString() + ", " + value3.ToString(), line_index, parent_block, block_offset);
         }
-        private bool SaveValue(TextBox field, int offset){ // write string to array
-            try{
-                float value = Convert.ToSingle(field.Text);
-                byte[] bytes = BitConverter.GetBytes(value);
-                bytes.CopyTo(parent_block, block_offset + offset);
-                return true;
-            }catch { return false; }
+        private static void SetValue(TriplefloatParam? target, TextBox? source, Separator? error, float value, byte[] block, int offset){
+            // update UI element if it exists
+            if (target != null){
+                target.is_setting_up = true;
+                source.Text = value.ToString();
+                if (error.Visibility != Visibility.Collapsed) error.Visibility = Visibility.Collapsed;
+                target.is_setting_up = false;
+            }
+            byte[] bytes = BitConverter.GetBytes(value);
+            bytes.CopyTo(block, offset);
+        }
+        // diff'ing stuff
+        TagInstance callback;
+        int line_index;
+        int param_type;
+        string? og_value; // note that this will not always be the actual OG value
+        public static void revert_value(string old_value, TriplefloatParam? target, byte[] block, int offset){
+            string[] values = old_value.Split(", ");
+            if (target != null){
+                target.og_value = old_value;
+                SetValue(target, target.Valuebox1, target.error_marker1, Convert.ToSingle(values[0]), block, offset);
+                SetValue(target, target.Valuebox2, target.error_marker2, Convert.ToSingle(values[1]), block, offset + 4);
+                SetValue(target, target.Valuebox3, target.error_marker3, Convert.ToSingle(values[2]), block, offset + 8);
+            }else{
+                SetValue(null, null, null, Convert.ToSingle(values[0]), block, offset);
+                SetValue(null, null, null, Convert.ToSingle(values[1]), block, offset + 4);
+                SetValue(null, null, null, Convert.ToSingle(values[2]), block, offset + 8);
+            }
         }
     }
 }

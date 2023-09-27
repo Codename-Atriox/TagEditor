@@ -49,31 +49,38 @@ namespace TagEditor.UI.Interfaces.Params{
             radians *= 180 / Math.PI; // convert to degrees
             Valuebox.Text = ((float)radians).ToString();
             // store og value
-            if (og_value == null) og_value = radians;
+            if (og_value == null) og_value = Valuebox.Text;
         }
 
         private void Button_SaveValue(object sender, TextChangedEventArgs e){
             if (is_setting_up) return;
-            try{SetValue(Convert.ToDouble(Valuebox.Text));
-                callback.set_diff(this, Namebox.Text, param_type, og_value.ToString(), Valuebox.Text, line_index);
+            try{SetValue(this, Valuebox, error_marker, Convert.ToDouble(Valuebox.Text), parent_block, block_offset);
+                callback.set_diff(this, Namebox.Text, param_type, og_value, Valuebox.Text, line_index, parent_block, block_offset);
             }catch { 
                 error_marker.Visibility = Visibility.Visible;
         }}
-        private void SetValue(double value){
+        private static void SetValue(AngleParam? target, TextBox? source, Separator? error, double value, byte[] block, int offset){
+            // update UI element if it exists
+            if (target != null){
+                target.is_setting_up = true;
+                source.Text = ((float)value).ToString();
+                if (error.Visibility != Visibility.Collapsed) error.Visibility = Visibility.Collapsed;
+                target.is_setting_up = false;
+            }
             value *= Math.PI / 180;
             byte[] bytes = BitConverter.GetBytes((float)value);
-            bytes.CopyTo(parent_block, block_offset);
-            if (error_marker.Visibility != Visibility.Collapsed) error_marker.Visibility = Visibility.Collapsed;
+            bytes.CopyTo(block, offset);
         }
         // diff'ing stuff
         TagInstance callback;
         int line_index;
         int param_type;
-        double? og_value; // note that this will not always be the actual OG value
-        public void revertValue(double og){
-            SetValue(og);
+        string? og_value; // note that this will not always be the actual OG value
+        public static void revert_value(string old_value, AngleParam? target, byte[] block, int offset){
+            if (target != null){
+                target.og_value = old_value;
+                SetValue(target, target.Valuebox, target.error_marker, Convert.ToDouble(old_value), block, offset);
+            }else SetValue(null, null, null, Convert.ToDouble(old_value), block, offset);
         }
-        // we need to implement a static system so we can call this even when the item doesn't exist, and we need a system to unhook & rehook to ui parameters
-
     }
 }

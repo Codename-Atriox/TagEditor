@@ -12,16 +12,17 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
+using TagEditor.UI.Windows;
 
-namespace TagEditor.UI.Interfaces.Params
-{
+namespace TagEditor.UI.Interfaces.Params{
     /// <summary>
     /// Interaction logic for IntegerParam.xaml
     /// </summary>
-    public partial class IntegerParam : UserControl
-    {
-        public IntegerParam(string name, byte[] _parent_block, int _block_offset, IntType _int_type)
-        {
+    public partial class IntegerParam : UserControl{
+        public IntegerParam(TagInstance _callback, int _param_type, int _line_index, string name, byte[] _parent_block, int _block_offset, IntType _int_type){
+            callback = _callback;
+            line_index = _line_index;
+            param_type = _param_type;
             parent_block = _parent_block;
             block_offset = _block_offset;
             int_type = _int_type;
@@ -87,53 +88,74 @@ namespace TagEditor.UI.Interfaces.Params
                     long value7 = BitConverter.ToInt64(parent_block[block_offset..(block_offset + 8)]);
                     Valuebox.Text = value7.ToString();
                     break;
-        }}
+            }
+            if (og_value == null) og_value = Valuebox.Text;
+        }
+
         private void Button_SaveValue(object sender, TextChangedEventArgs e){
             if (is_setting_up) return;
-            if (!SaveValue()) 
+            // we going to call the exception inside the set value function this time
+            try{SetValue(this, Valuebox, error_marker, Valuebox.Text, int_type, parent_block, block_offset);
+                callback.set_diff(this, Namebox.Text, param_type, og_value, Valuebox.Text, line_index, parent_block, block_offset);
+            }catch { 
                 error_marker.Visibility = Visibility.Visible;
-            else if (error_marker.Visibility != Visibility.Collapsed) error_marker.Visibility = Visibility.Collapsed;
+        }}
+        private static void SetValue(IntegerParam? target, TextBox? source, Separator? error, string value, IntType int_type, byte[] block, int offset){
+            byte[] results;
+            switch ((byte)int_type){
+                case 0: // byte
+                    sbyte value0 = Convert.ToSByte(value);
+                    results = new byte[1] { (byte)value0 }; // Convert.ToByte(value0);// what is this??
+                    break;
+                case 1: // short
+                    short value6 = Convert.ToInt16(value);
+                    results = BitConverter.GetBytes(value6);
+                    break;
+                case 2: // int
+                    int value1 = Convert.ToInt32(value);
+                    results = BitConverter.GetBytes(value1);
+                    break;
+                case 3: // long
+                    long value2 = Convert.ToInt64(value);
+                    results = BitConverter.GetBytes(value2);
+                    break;
+                case 4: // ubyte
+                    byte value7 = Convert.ToByte(value);
+                    results = new byte[1] { value7 };
+                    break;
+                case 5: // ushort
+                    ushort value3 = Convert.ToUInt16(value);
+                    results = BitConverter.GetBytes(value3);
+                    break;
+                case 6: // uint
+                    uint value4 = Convert.ToUInt32(value);
+                    results = BitConverter.GetBytes(value4);
+                    break;
+                case 7: // ulong
+                    ulong value5 = Convert.ToUInt64(value);
+                    results = BitConverter.GetBytes(value5);
+                    break;
+                default: throw new Exception("invalid int type?");
+            }
+            // assuming we didn't cause an exception, then we can proceed
+            if (target != null){
+                target.is_setting_up = true;
+                source.Text = value;
+                if (error.Visibility != Visibility.Collapsed) error.Visibility = Visibility.Collapsed;
+                target.is_setting_up = false;
+            }
+            results.CopyTo(block, offset);
         }
-        private bool SaveValue(){ // write new value to array
-            try{switch ((byte)int_type){
-                    case 0: // byte
-                        sbyte value0 = Convert.ToSByte(Valuebox.Text);
-                        parent_block[block_offset] = Convert.ToByte(value0);
-                        break;
-                    case 1: // short
-                        short value = Convert.ToInt16(Valuebox.Text);
-                        assign_bytes(BitConverter.GetBytes(value));
-                        break;
-                    case 2: // int
-                        int value1 = Convert.ToInt32(Valuebox.Text);
-                        assign_bytes(BitConverter.GetBytes(value1));
-                        break;
-                    case 3: // long
-                        long value2 = Convert.ToInt64(Valuebox.Text);
-                        assign_bytes(BitConverter.GetBytes(value2));
-                        break;
-                    case 4: // ubyte
-                        byte value6 = Convert.ToByte(Valuebox.Text);
-                        parent_block[block_offset] = value6;
-                        break;
-                    case 5: // ushort
-                        ushort value3 = Convert.ToUInt16(Valuebox.Text);
-                        assign_bytes(BitConverter.GetBytes(value3));
-                        break;
-                    case 6: // uint
-                        uint value4 = Convert.ToUInt32(Valuebox.Text);
-                        assign_bytes(BitConverter.GetBytes(value4));
-                        break;
-                    case 7: // ulong
-                        ulong value5 = Convert.ToUInt64(Valuebox.Text);
-                        assign_bytes(BitConverter.GetBytes(value5));
-                        break;
-                }
-                return true;
-            } catch { return false; }
-        }
-        private void assign_bytes(byte[] new_bytes){
-            new_bytes.CopyTo(parent_block, block_offset);
+        // diff'ing stuff
+        TagInstance callback;
+        int line_index;
+        int param_type;
+        string? og_value; // note that this will not always be the actual OG value
+        public static void revert_value(string old_value, IntType int_type, IntegerParam? target,  byte[] block, int offset){
+            if (target != null){
+                target.og_value = old_value;
+                SetValue(target, target.Valuebox, target.error_marker, old_value, int_type, block, offset);
+            }else SetValue(null, null, null, old_value, int_type, block, offset);
         }
     }
 }
