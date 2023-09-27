@@ -19,7 +19,9 @@ namespace TagEditor.UI.Interfaces.Params{
     /// Interaction logic for TriplefloatParam.xaml
     /// </summary>
     public partial class TriplefloatParam : UserControl{
-        public TriplefloatParam(TagInstance _callback, int _param_type, int _line_index, string name, byte[] _parent_block, int _block_offset){
+        public string key;
+        public TriplefloatParam(TagInstance _callback, int _param_type, int _line_index, string name, byte[] _parent_block, int _block_offset, string _key){
+            key = _key;
             callback = _callback;
             line_index = _line_index;
             param_type = _param_type;
@@ -30,7 +32,8 @@ namespace TagEditor.UI.Interfaces.Params{
             Namebox.Text = name;
             is_setting_up = false;
         }
-        public void reload(byte[] _parent_block, int _block_offset){
+        public void reload(byte[] _parent_block, int _block_offset, string _key){
+            key = _key;
             is_setting_up = true;
             parent_block = _parent_block;
             block_offset = _block_offset;
@@ -69,7 +72,7 @@ namespace TagEditor.UI.Interfaces.Params{
             SetValue(this, Valuebox1, error_marker1, value1, parent_block, block_offset);
             SetValue(this, Valuebox2, error_marker2, value2, parent_block, block_offset + 4);
             SetValue(this, Valuebox3, error_marker3, value3, parent_block, block_offset + 8);
-            callback.set_diff(this, Namebox.Text, param_type, og_value, value1.ToString() + ", " + value2.ToString() + ", " + value3.ToString(), line_index, parent_block, block_offset);
+            callback.set_diff(this, key, Namebox.Text, param_type, og_value, value1.ToString() + ", " + value2.ToString() + ", " + value3.ToString(), line_index, parent_block, block_offset);
         }
         private static void SetValue(TriplefloatParam? target, TextBox? source, Separator? error, float value, byte[] block, int offset){
             // update UI element if it exists

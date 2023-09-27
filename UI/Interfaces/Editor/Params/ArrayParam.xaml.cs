@@ -23,9 +23,10 @@ namespace TagEditor.UI.Interfaces.Editor.Params
     /// </summary>
     public partial class ArrayParam : UserControl
     {
-        public ArrayParam(string name, tag.thing _tag_data, int _struct_offset, string _guid, expand_link _parent, int _length, int _struct_size)
+        public string key;
+        public ArrayParam(string name, tag.thing _tag_data, int _struct_offset, string _guid, expand_link _parent, int _length, int _struct_size, string _key)
         {
-
+            key = _key;
             InitializeComponent();
 
             tag_data = _tag_data;
@@ -38,7 +39,8 @@ namespace TagEditor.UI.Interfaces.Editor.Params
             length = _length;
             struct_size = _struct_size;
         }
-        public void reload(tag.thing _tag_data, int _struct_offset){
+        public void reload(tag.thing _tag_data, int _struct_offset, string _key){
+            key = _key;
             // name does not need updating? as the size is fixed between every instance
             tag_data = _tag_data;
             struct_offset = _struct_offset;

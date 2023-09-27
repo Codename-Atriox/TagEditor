@@ -16,7 +16,9 @@ using TagEditor.UI.Windows;
 
 namespace TagEditor.UI.Interfaces.Params{
     public partial class FloatParam : UserControl{
-        public FloatParam(TagInstance _callback, int _param_type, int _line_index, string name, byte[] _parent_block, int _block_offset, bool _is_fraction){
+        public string key;
+        public FloatParam(TagInstance _callback, int _param_type, int _line_index, string name, byte[] _parent_block, int _block_offset, bool _is_fraction, string _key){
+            key = _key;
             callback = _callback;
             line_index = _line_index;
             param_type = _param_type;
@@ -28,7 +30,8 @@ namespace TagEditor.UI.Interfaces.Params{
             is_setting_up = false;
             is_fraction = _is_fraction;
         }
-        public void reload(byte[] _parent_block, int _block_offset){
+        public void reload(byte[] _parent_block, int _block_offset, string _key){
+            key = _key;
             is_setting_up = true;
             parent_block = _parent_block;
             block_offset = _block_offset;
@@ -50,7 +53,7 @@ namespace TagEditor.UI.Interfaces.Params{
             try{float value = Convert.ToSingle(Valuebox.Text);
                 if (is_fraction && (!(value >= 0.0f && value <= 1.0f))) throw new Exception(); // factions are between 0 & 1
                 SetValue(this, Valuebox, error_marker, value, parent_block, block_offset);
-                callback.set_diff(this, Namebox.Text, param_type, og_value, Valuebox.Text, line_index, parent_block, block_offset);
+                callback.set_diff(this, key, Namebox.Text, param_type, og_value, Valuebox.Text, line_index, parent_block, block_offset);
             }catch { 
                 error_marker.Visibility = Visibility.Visible;
         }}

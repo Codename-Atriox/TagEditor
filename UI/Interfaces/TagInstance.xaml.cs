@@ -53,7 +53,7 @@ namespace TagEditor.UI.Windows{
             XmlNode? root_struct_node = loaded_tag.reference_root.SelectSingleNode('_' + loaded_tag.root.GUID);
             string? param_name = root_struct_node.Attributes?["Name"]?.Value;
 
-            StructParam param = new(param_name, loaded_tag.root.blocks[0], 0, loaded_tag.root.GUID, root_expand);
+            StructParam param = new(param_name, loaded_tag.root.blocks[0], 0, loaded_tag.root.GUID, root_expand, "");
             params_panel.Children.Add(param);
             line_indexes.Add("0");
             line_groups.Add("root");
@@ -89,6 +89,7 @@ namespace TagEditor.UI.Windows{
             public expand_link(TagInstance parent){
                 send_info_to = parent;
             }
+            public string unique_id;
             // only needs to be assigned for items that are automatically opened
             public int literal_line_index; // needs to be updated when any expand_link is either opened or closed
 
@@ -104,8 +105,8 @@ namespace TagEditor.UI.Windows{
 
             public bool is_opened = false;
             public bool is_on_screen = false;
-            public void wipe_child()
-            {
+            public void wipe_child(){
+                // we may beable to use this section to unhook diffs??
 
                 foreach (var v in child_links)
                 { // cleanup expand buttons of the child elements that we're about to destroy
@@ -169,22 +170,22 @@ namespace TagEditor.UI.Windows{
                     if (struct_UI_element is StructParam){
                         StructParam test = struct_UI_element as StructParam;
                         test.expand_indicator.Visibility = Visibility.Collapsed;
-                        send_info_to.Expand_struct(test.tag_data, test.guid, test.params_panel, test.struct_offset, this);
+                        send_info_to.Expand_struct(test.tag_data, test.guid, test.params_panel, test.struct_offset, this, test.key);
 
                     }else if (struct_UI_element is ArrayParam){
                         ArrayParam test = struct_UI_element as ArrayParam;
                         test.expand_indicator.Visibility = Visibility.Collapsed;
-                        send_info_to.Expand_struct(test.tag_data, test.guid, test.params_panel, test.struct_offset + (test.struct_size * test.selected_index), this);
+                        send_info_to.Expand_struct(test.tag_data, test.guid, test.params_panel, test.struct_offset + (test.struct_size * test.selected_index), this, test.key + ":" + test.selected_index);
 
                     }else if (struct_UI_element is TagblockParam){
                         TagblockParam test = struct_UI_element as TagblockParam;
                         test.expand_indicator.Visibility = Visibility.Collapsed;
-                        send_info_to.Expand_struct(test.tag_data.blocks[test.selected_index], test.tag_data.GUID, test.params_panel, 0, this);
+                        send_info_to.Expand_struct(test.tag_data.blocks[test.selected_index], test.tag_data.GUID, test.params_panel, 0, this, test.key + ":" + test.selected_index);
 
                     }else if(struct_UI_element is ResourceParam){
                         ResourceParam test = struct_UI_element as ResourceParam;
                         test.expand_indicator.Visibility = Visibility.Collapsed;
-                        send_info_to.Expand_struct(test.tag_data.blocks[0], test.tag_data.GUID, test.params_panel, 0, this);
+                        send_info_to.Expand_struct(test.tag_data.blocks[0], test.tag_data.GUID, test.params_panel, 0, this, test.key);
                     }
                 // OPEN CLOSED TAG
                 } else{ // is closed // open the tag as normal, generate new UI
@@ -204,22 +205,22 @@ namespace TagEditor.UI.Windows{
                     if (struct_UI_element is StructParam){
                         StructParam test = struct_UI_element as StructParam;
                         test.expand_indicator.Visibility = Visibility.Collapsed;
-                        send_info_to.Expand_struct(test.tag_data, test.guid, test.params_panel, test.struct_offset, this);
+                        send_info_to.Expand_struct(test.tag_data, test.guid, test.params_panel, test.struct_offset, this, test.key);
 
                     }else if (struct_UI_element is ArrayParam){
                         ArrayParam test = struct_UI_element as ArrayParam;
                         test.expand_indicator.Visibility = Visibility.Collapsed;
-                        send_info_to.Expand_struct(test.tag_data, test.guid, test.params_panel, test.struct_offset + (test.struct_size * test.selected_index), this);
+                        send_info_to.Expand_struct(test.tag_data, test.guid, test.params_panel, test.struct_offset + (test.struct_size * test.selected_index), this, test.key + ":" + test.selected_index);
 
                     }else if (struct_UI_element is TagblockParam){
                         TagblockParam test = struct_UI_element as TagblockParam;
                         test.expand_indicator.Visibility = Visibility.Collapsed;
-                        send_info_to.Expand_struct(test.tag_data.blocks[test.selected_index], test.tag_data.GUID, test.params_panel, 0, this);
+                        send_info_to.Expand_struct(test.tag_data.blocks[test.selected_index], test.tag_data.GUID, test.params_panel, 0, this, test.key + ":" + test.selected_index);
 
                     }else if(struct_UI_element is ResourceParam){
                         ResourceParam test = struct_UI_element as ResourceParam;
                         test.expand_indicator.Visibility = Visibility.Collapsed;
-                        send_info_to.Expand_struct(test.tag_data.blocks[0], test.tag_data.GUID, test.params_panel, 0, this);
+                        send_info_to.Expand_struct(test.tag_data.blocks[0], test.tag_data.GUID, test.params_panel, 0, this, test.key);
                     }
                 }
                 send_info_to.attempt_to_update_lists();
@@ -278,7 +279,10 @@ namespace TagEditor.UI.Windows{
 
         ObservableCollection<string> line_indexes = new();
         ObservableCollection<string> line_groups = new();
-        public void Expand_struct(tag.thing _struct, string struct_guid, StackPanel container, int struct_offset, expand_link expandus_linkus){
+        public void Expand_struct(tag.thing _struct, string struct_guid, StackPanel container, int struct_offset, expand_link expandus_linkus, string key){
+            // we need to generate a key to identify each component
+            // ideally, we'd just index each element, and then index tagblocks?
+
 
             // container.Children.Clear(); // knock out any previous elements here, although it would be more efficient to reuse them
             XmlNode? guid_test = loaded_tag.reference_root.SelectSingleNode('_' + struct_guid);
@@ -304,6 +308,8 @@ namespace TagEditor.UI.Windows{
                 current_line++;
                 theoretical_line++;
                 int type = Convert.ToInt32(node.Name.Substring(1), 16);
+                string param_key = key + "." + i; // just slap on the index as our unique sub identifier
+                // and then we can check if this key already exists within our diff set, and we can just update the value to have this new param ui or something
 
                 // determine whether the item already exists or not
                 UIElement? bobject = null;
@@ -324,37 +330,37 @@ namespace TagEditor.UI.Windows{
                     // ///////////////////// //
                     switch (type){
                         case 0x0:{ // _field_string
-                                StringParam pad_garb_val = new(param_name, _struct.tag_data, offset, 32);
+                                StringParam pad_garb_val = new(this, type, theoretical_line, param_name, _struct.tag_data, offset, 32, param_key);
                                 container.Children.Add(pad_garb_val);
                             }continue;  
                         case 0x1:{ // _field_long_string
-                                StringParam pad_garb_val = new(param_name, _struct.tag_data, offset, 256);
+                                StringParam pad_garb_val = new(this, type, theoretical_line, param_name, _struct.tag_data, offset, 256, param_key);
                                 container.Children.Add(pad_garb_val);
                             }continue; 
                         case 0x2:{ // _field_string_id
-                                HashParam pad_garb_val = new(param_name, _struct.tag_data, offset);
+                                HashParam pad_garb_val = new(this, type, theoretical_line, param_name, _struct.tag_data, offset, param_key);
                                 container.Children.Add(pad_garb_val);
                             }continue;
                         case 0x3: //
                             break;  
                         case 0x4:{ // _field_char_integer
-                                IntegerParam new_val = new(param_name, _struct.tag_data, offset, IntegerParam.IntType.signed_char);
+                                IntegerParam new_val = new(this, type, theoretical_line, param_name, _struct.tag_data, offset, IntegerParam.IntType.signed_char, param_key);
                                 container.Children.Add(new_val);
                             }continue;  
                         case 0x5:{ // _field_short_integer
-                                IntegerParam new_val = new(param_name, _struct.tag_data, offset, IntegerParam.IntType.signed_short);
+                                IntegerParam new_val = new(this, type, theoretical_line, param_name, _struct.tag_data, offset, IntegerParam.IntType.signed_short, param_key);
                                 container.Children.Add(new_val);
                             }continue;  
                         case 0x6:{ // _field_long_integer
-                                IntegerParam new_val = new(param_name, _struct.tag_data, offset, IntegerParam.IntType.signed_int);
+                                IntegerParam new_val = new(this, type, theoretical_line, param_name, _struct.tag_data, offset, IntegerParam.IntType.signed_int, param_key);
                                 container.Children.Add(new_val);
                             }continue;  
                         case 0x7:{ // _field_int64_integer
-                                IntegerParam new_val = new(param_name, _struct.tag_data, offset, IntegerParam.IntType.signed_long);
+                                IntegerParam new_val = new(this, type, theoretical_line, param_name, _struct.tag_data, offset, IntegerParam.IntType.signed_long, param_key);
                                 container.Children.Add(new_val);
                             }continue;  
                         case 0x8:{ // _field_angle
-                                AngleParam new_val = new(param_name, _struct.tag_data, offset);
+                                AngleParam new_val = new(this, type, theoretical_line, param_name, _struct.tag_data, offset, param_key);
                                 container.Children.Add(new_val);
                             }continue;
                         case  0x9: // _field_tag
@@ -363,21 +369,21 @@ namespace TagEditor.UI.Windows{
                                 string[] enum_names = new string[node.ChildNodes.Count];
                                 for (int i2 = 0; i2 < enum_names.Length; i2++)
                                     enum_names[i2] = node.ChildNodes[i2].Attributes?["n"]?.Value;
-                                EnumParam new_val = new(param_name, _struct.tag_data, offset, EnumParam.EnumType._byte, enum_names);
+                                EnumParam new_val = new(this, type, theoretical_line, param_name, _struct.tag_data, offset, EnumParam.EnumType._byte, enum_names, param_key);
                                 container.Children.Add(new_val);
                             }continue;
                         case  0xB:{ // _field_short_enum
                                 string[] enum_names = new string[node.ChildNodes.Count];
                                 for (int i2 = 0; i2 < enum_names.Length; i2++)
                                     enum_names[i2] = node.ChildNodes[i2].Attributes?["n"]?.Value;
-                                EnumParam new_val = new(param_name, _struct.tag_data, offset, EnumParam.EnumType._short, enum_names);
+                                EnumParam new_val = new(this, type, theoretical_line, param_name, _struct.tag_data, offset, EnumParam.EnumType._short, enum_names, param_key);
                                 container.Children.Add(new_val);
                             }continue;
                         case  0xC:{ // _field_long_enum
                                 string[] enum_names = new string[node.ChildNodes.Count];
                                 for (int i2 = 0; i2 < enum_names.Length; i2++)
                                     enum_names[i2] = node.ChildNodes[i2].Attributes?["n"]?.Value;
-                                EnumParam new_val = new(param_name, _struct.tag_data, offset, EnumParam.EnumType._int, enum_names);
+                                EnumParam new_val = new(this, type, theoretical_line, param_name, _struct.tag_data, offset, EnumParam.EnumType._int, enum_names, param_key);
                                 container.Children.Add(new_val);
                             }continue;
                         case  0xD:{ // _field_long_flags
@@ -386,7 +392,7 @@ namespace TagEditor.UI.Windows{
                                     if (node.ChildNodes.Count > i2) flag_names[i2] = node.ChildNodes[i2].Attributes?["n"]?.Value;
                                     else flag_names[i2] = "Flag" + i2;
                                 }
-                                FlagsParam new_val = new(param_name, _struct.tag_data, offset, FlagsParam.FlagType._int, flag_names);
+                                FlagsParam new_val = new(this, type, theoretical_line, param_name, _struct.tag_data, offset, FlagsParam.FlagType._int, flag_names, param_key);
                                 container.Children.Add(new_val);
                             }continue;
                         case  0xE:{ // _field_word_flags
@@ -395,7 +401,7 @@ namespace TagEditor.UI.Windows{
                                     if (node.ChildNodes.Count > i2) flag_names[i2] = node.ChildNodes[i2].Attributes?["n"]?.Value;
                                     else flag_names[i2] = "Flag" + i2;
                                 }
-                                FlagsParam new_val = new(param_name, _struct.tag_data, offset, FlagsParam.FlagType._short, flag_names);
+                                FlagsParam new_val = new(this, type, theoretical_line, param_name, _struct.tag_data, offset, FlagsParam.FlagType._short, flag_names, param_key);
                                 container.Children.Add(new_val);
                             }continue;
                         case  0xF:{ // _field_byte_flags
@@ -404,15 +410,15 @@ namespace TagEditor.UI.Windows{
                                     if (node.ChildNodes.Count > i2) flag_names[i2] = node.ChildNodes[i2].Attributes?["n"]?.Value;
                                     else flag_names[i2] = "Flag" + i2;
                                 }
-                                FlagsParam new_val = new(param_name, _struct.tag_data, offset, FlagsParam.FlagType._byte, flag_names);
+                                FlagsParam new_val = new(this, type, theoretical_line, param_name, _struct.tag_data, offset, FlagsParam.FlagType._byte, flag_names, param_key);
                                 container.Children.Add(new_val);
                             }continue;
                         case 0x10:{ // _field_point_2d
-                                DoubleshortParam new_val = new(param_name, _struct.tag_data, offset);
+                                DoubleshortParam new_val = new(this, type, theoretical_line, param_name, _struct.tag_data, offset, param_key);
                                 container.Children.Add(new_val);
                             }continue;
                         case 0x11:{ // _field_rectangle_2d
-                                DoubleshortParam new_val = new(param_name, _struct.tag_data, offset);
+                                DoubleshortParam new_val = new(this, type, theoretical_line, param_name, _struct.tag_data, offset, param_key);
                                 container.Children.Add(new_val);
                             }continue;
                         case 0x12: // _field_rgb_color
@@ -420,37 +426,37 @@ namespace TagEditor.UI.Windows{
                         case 0x13: // _field_argb_color 
                             break;   
                         case 0x14:{ // _field_real
-                                FloatParam new_val = new(param_name, _struct.tag_data, offset, false);
+                                FloatParam new_val = new(this, type, theoretical_line, param_name, _struct.tag_data, offset, false, param_key);
                                 container.Children.Add(new_val);
                             }continue;  
                         case 0x15:{ // _field_real_fraction
-                                FloatParam new_val = new(param_name, _struct.tag_data, offset, true);
+                                FloatParam new_val = new(this, type, theoretical_line, param_name, _struct.tag_data, offset, true, param_key);
                                 container.Children.Add(new_val);
                             }continue;  
                         case 0x16:{ // _field_real_point_2d
-                                DoublefloatParam new_val = new(param_name, _struct.tag_data, offset, false);
+                                DoublefloatParam new_val = new(this, type, theoretical_line, param_name, _struct.tag_data, offset, false, param_key);
                                 container.Children.Add(new_val);
                             }continue;
                         case 0x17:{ // _field_real_point_3d
-                                TriplefloatParam new_val = new(param_name, _struct.tag_data, offset);
+                                TriplefloatParam new_val = new(this, type, theoretical_line, param_name, _struct.tag_data, offset, param_key);
                                 container.Children.Add(new_val);
                             }continue;
                         case 0x18:{ // _field_real_vector_2d
-                                DoublefloatParam new_val = new(param_name, _struct.tag_data, offset, false);
+                                DoublefloatParam new_val = new(this, type, theoretical_line, param_name, _struct.tag_data, offset, false, param_key);
                                 container.Children.Add(new_val);
                             }continue;
                         case 0x19:{ // _field_real_vector_3d
-                                TriplefloatParam new_val = new(param_name, _struct.tag_data, offset);
+                                TriplefloatParam new_val = new(this, type, theoretical_line, param_name, _struct.tag_data, offset, param_key);
                                 container.Children.Add(new_val);
                             }continue;
                         case 0x1A:  // _field_real_quaternion
                             break; 
                         case 0x1B:{ // _field_real_euler_angles_2d
-                                DoublefloatParam new_val = new(param_name, _struct.tag_data, offset, false);
+                                DoublefloatParam new_val = new(this, type, theoretical_line, param_name, _struct.tag_data, offset, false, param_key);
                                 container.Children.Add(new_val);
                             }continue;
                         case 0x1C:{ // _field_real_euler_angles_3d
-                                TriplefloatParam new_val = new(param_name, _struct.tag_data, offset);
+                                TriplefloatParam new_val = new(this, type, theoretical_line, param_name, _struct.tag_data, offset, param_key);
                                 container.Children.Add(new_val);
                             }continue;
                         case 0x1D: // _field_real_plane_2d
@@ -466,19 +472,19 @@ namespace TagEditor.UI.Windows{
                         case 0x22: // _field_real_ahsv_color
                             break;  
                         case 0x23:{ // _field_short_bounds
-                                DoubleshortParam new_val = new(param_name, _struct.tag_data, offset);
+                                DoubleshortParam new_val = new(this, type, theoretical_line, param_name, _struct.tag_data, offset, param_key);
                                 container.Children.Add(new_val);
                             }continue;
                         case 0x24:{ // _field_angle_bounds
-                                DoubleangleParam new_val = new(param_name, _struct.tag_data, offset);
+                                DoubleangleParam new_val = new(this, type, theoretical_line, param_name, _struct.tag_data, offset, param_key);
                                 container.Children.Add(new_val);
                             }continue;
                         case 0x25:{ // _field_real_bounds
-                                DoublefloatParam new_val = new(param_name, _struct.tag_data, offset, false);
+                                DoublefloatParam new_val = new(this, type, theoretical_line, param_name, _struct.tag_data, offset, false, param_key);
                                 container.Children.Add(new_val);
                             }continue;
                         case 0x26:{ // _field_real_fraction_bounds
-                                DoublefloatParam new_val = new(param_name, _struct.tag_data, offset, true);
+                                DoublefloatParam new_val = new(this, type, theoretical_line, param_name, _struct.tag_data, offset, true, param_key);
                                 container.Children.Add(new_val);
                             }continue;
                         case 0x27: //
@@ -509,7 +515,7 @@ namespace TagEditor.UI.Windows{
                             break;
                         case 0x34: case 0x35:{ // _field_skip // _field_pad
                                 short size = Convert.ToInt16(node.Attributes?["Length"]?.Value);
-                                GarbageParameter pad_garb_val = new(param_name, _struct.tag_data, offset, size);
+                                GarbageParameter pad_garb_val = new(this, type, theoretical_line, param_name, _struct.tag_data, offset, size, param_key);
                                 container.Children.Add(pad_garb_val);
                             }continue;
                         case 0x36:{ // _field_explanation
@@ -528,7 +534,7 @@ namespace TagEditor.UI.Windows{
                         case 0x38:{ // _field_struct 
                                 string next_guid = node.Attributes?["GUID"]?.Value;
                                 expand_link struct_link = expandus_linkus.child_links[i];
-                                StructParam param = new(param_name, _struct, offset, next_guid, struct_link);
+                                StructParam param = new(param_name, _struct, offset, next_guid, struct_link, param_key);
                                 container.Children.Add(param);
                                 setup_struct_element(struct_link, param, current_line);
                                 theoretical_line += struct_link.total_contained_lines;
@@ -538,7 +544,7 @@ namespace TagEditor.UI.Windows{
                                 int array_length = Convert.ToInt32(node.Attributes?["Count"]?.Value);
                                 int array_struct_size = Convert.ToInt32(loaded_tag.reference_root.SelectSingleNode('_' + next_guid).Attributes?["Size"]?.Value, 16);
                                 expand_link struct_link = expandus_linkus.child_links[i];
-                                ArrayParam param = new(param_name, _struct, offset, next_guid, struct_link, array_length, array_struct_size);
+                                ArrayParam param = new(param_name, _struct, offset, next_guid, struct_link, array_length, array_struct_size, param_key);
                                 container.Children.Add(param);
                                 setup_struct_element(struct_link, param, current_line);
                                 theoretical_line += struct_link.total_contained_lines;
@@ -548,19 +554,19 @@ namespace TagEditor.UI.Windows{
                         case 0x3B: // end of struct
                             break;
                         case 0x3C:{ // _field_byte_integer
-                                IntegerParam new_val = new(param_name, _struct.tag_data, offset, IntegerParam.IntType.unsigned_char);
+                                IntegerParam new_val = new(this, type, theoretical_line, param_name, _struct.tag_data, offset, IntegerParam.IntType.unsigned_char, param_key);
                                 container.Children.Add(new_val);
                             }continue;
                         case 0x3D:{ // _field_word_integer
-                                IntegerParam new_val = new(param_name, _struct.tag_data, offset, IntegerParam.IntType.unsigned_short);
+                                IntegerParam new_val = new(this, type, theoretical_line, param_name, _struct.tag_data, offset, IntegerParam.IntType.unsigned_short, param_key);
                                 container.Children.Add(new_val);
                             }continue;
                         case 0x3E:{ // _field_dword_integer
-                                IntegerParam new_val = new(param_name, _struct.tag_data, offset, IntegerParam.IntType.unsigned_int);
+                                IntegerParam new_val = new(this, type, theoretical_line, param_name, _struct.tag_data, offset, IntegerParam.IntType.unsigned_int, param_key);
                                 container.Children.Add(new_val);
                             }continue;
                         case 0x3F:{ // _field_qword_integer
-                                IntegerParam new_val = new(param_name, _struct.tag_data, offset, IntegerParam.IntType.unsigned_long);
+                                IntegerParam new_val = new(this, type, theoretical_line, param_name, _struct.tag_data, offset, IntegerParam.IntType.unsigned_long, param_key);
                                 container.Children.Add(new_val);
                             }continue;
                         case 0x40:{ // _field_block_v2
@@ -568,22 +574,22 @@ namespace TagEditor.UI.Windows{
                                     break;
 
                                 expand_link struct_link = expandus_linkus.child_links[i];
-                                TagblockParam param = new(param_name, _struct.tag_block_refs[(ulong)offset], struct_link);
+                                TagblockParam param = new(param_name, _struct.tag_block_refs[(ulong)offset], struct_link, param_key);
                                 container.Children.Add(param);
                                 setup_struct_element(struct_link, param, current_line);
                                 theoretical_line += struct_link.total_contained_lines;
                             }continue;
                         case 0x41:{ // _field_reference_v2
-                                TagrefParam new_val = new(param_name, _struct.tag_data, offset, main.Active_TagExplorer);
+                                TagrefParam new_val = new(param_name, _struct.tag_data, offset, main.Active_TagExplorer, param_key);
                                 container.Children.Add(new_val);
                             }continue;
                         case 0x42:{ // _field_data_v2
-                                DataParam new_val = new(param_name, _struct.tag_resource_refs[(ulong)offset], _struct.tag_data, offset, param_group_sizes[type]);
+                                DataParam new_val = new(param_name, _struct.tag_resource_refs[(ulong)offset], _struct.tag_data, offset, param_group_sizes[type], param_key);
                                 container.Children.Add(new_val);
                             }continue;
                         case 0x43:{ // tag_resource
                                 expand_link struct_link = expandus_linkus.child_links[i];
-                                ResourceParam param = new(param_name, _struct.resource_file_refs[(ulong)offset], struct_link);
+                                ResourceParam param = new(param_name, _struct.resource_file_refs[(ulong)offset], struct_link, param_key);
                                 container.Children.Add(param);
                                 setup_struct_element(struct_link, param, current_line);
                                 theoretical_line += struct_link.total_contained_lines;
@@ -593,7 +599,7 @@ namespace TagEditor.UI.Windows{
                         case 0x45: // UNKNOWN
                             break;
                     } // if we're still here, then the type was unimplemented, create new garbage block
-                    GarbageParameter garb_val = new(param_name, _struct.tag_data, offset, param_group_sizes[type]);
+                    GarbageParameter garb_val = new(this, type, theoretical_line, param_name, _struct.tag_data, offset, param_group_sizes[type], param_key);
                     container.Children.Add(garb_val);
                 } else{
 
@@ -604,17 +610,17 @@ namespace TagEditor.UI.Windows{
                         case 0x0:{ // _field_string
                                 StringParam? pad_garb_val = bobject as StringParam;
                                 Debug.Assert(pad_garb_val != null, "cast failed");
-                                pad_garb_val.reload(_struct.tag_data, offset);
+                                pad_garb_val.reload(_struct.tag_data, offset, param_key);
                             }continue;  
                         case 0x1:{ // _field_long_string
                                 StringParam? pad_garb_val = bobject as StringParam;
                                 Debug.Assert(pad_garb_val != null, "cast failed");
-                                pad_garb_val.reload(_struct.tag_data, offset);
+                                pad_garb_val.reload(_struct.tag_data, offset, param_key);
                             }continue; 
                         case 0x2:{ // _field_string_id
                                 HashParam? pad_garb_val = bobject as HashParam;
                                 Debug.Assert(pad_garb_val != null, "cast failed");
-                                pad_garb_val.reload(_struct.tag_data, offset);
+                                pad_garb_val.reload(_struct.tag_data, offset, param_key);
                             }continue;
                         case 0x3:  //
                             break;
@@ -628,12 +634,12 @@ namespace TagEditor.UI.Windows{
                         case 0x7:{ // _field_int64_integer
                                 IntegerParam? new_val = bobject as IntegerParam;
                                 Debug.Assert(new_val != null, "cast failed");
-                                new_val.reload(_struct.tag_data, offset);
+                                new_val.reload(_struct.tag_data, offset, param_key);
                             }continue;  
                         case 0x8:{ // _field_angle
                                 AngleParam? new_val = bobject as AngleParam;
                                 Debug.Assert(new_val != null, "cast failed");
-                                new_val.reload(_struct.tag_data, offset);
+                                new_val.reload(_struct.tag_data, offset, param_key);
                             }continue;
                         case  0x9:  // _field_tag
                             break;  
@@ -642,25 +648,25 @@ namespace TagEditor.UI.Windows{
                         case  0xC:{ // _field_long_enum
                                 EnumParam? new_val = bobject as EnumParam;
                                 Debug.Assert(new_val != null, "cast failed");
-                                new_val.reload(_struct.tag_data, offset);
+                                new_val.reload(_struct.tag_data, offset, param_key);
                             }continue;
                         case  0xD:  // _field_long_flags
                         case  0xE:  // _field_word_flags
                         case  0xF:{ // _field_byte_flags
                                 FlagsParam? new_val = bobject as FlagsParam;
                                 Debug.Assert(new_val != null, "cast failed");
-                                new_val.reload(_struct.tag_data, offset);
+                                new_val.reload(_struct.tag_data, offset, param_key);
                             }continue;
 
                         case 0x10:{ // _field_point_2d
                                 DoubleshortParam? new_val = bobject as DoubleshortParam;
                                 Debug.Assert(new_val != null, "cast failed");
-                                new_val.reload(_struct.tag_data, offset);
+                                new_val.reload(_struct.tag_data, offset, param_key);
                             }continue;
                         case 0x11:{ // _field_rectangle_2d // we may decide to change this to its own struct some time in the future
                                 DoubleshortParam? new_val = bobject as DoubleshortParam;
                                 Debug.Assert(new_val != null, "cast failed");
-                                new_val.reload(_struct.tag_data, offset);
+                                new_val.reload(_struct.tag_data, offset, param_key);
                             }continue;
                         case 0x12:  // _field_rgb_color
                             break;  
@@ -670,7 +676,7 @@ namespace TagEditor.UI.Windows{
                         case 0x15:{ // _field_real_fraction
                                 FloatParam? new_val = bobject as FloatParam;
                                 Debug.Assert(new_val != null, "cast failed");
-                                new_val.reload(_struct.tag_data, offset);
+                                new_val.reload(_struct.tag_data, offset, param_key);
                             }continue;
                         case 0x25: // _field_real_bounds
                         case 0x26: // _field_real_fraction_bounds
@@ -678,25 +684,25 @@ namespace TagEditor.UI.Windows{
                         case 0x18:{ // _field_real_vector_2d // REORDERED //
                                 DoublefloatParam? new_val = bobject as DoublefloatParam;
                                 Debug.Assert(new_val != null, "cast failed");
-                                new_val.reload(_struct.tag_data, offset);
+                                new_val.reload(_struct.tag_data, offset, param_key);
                             }continue;
                         case 0x17:  // _field_real_point_3d // REORDERED //
                         case 0x19:{ // _field_real_vector_3d
                                 TriplefloatParam? new_val = bobject as TriplefloatParam;
                                 Debug.Assert(new_val != null, "cast failed");
-                                new_val.reload(_struct.tag_data, offset);
+                                new_val.reload(_struct.tag_data, offset, param_key);
                             }continue;
                         case 0x1A:  // _field_real_quaternion
                             break; 
                         case 0x1B:{ // _field_real_euler_angles_2d
                                 DoublefloatParam? new_val = bobject as DoublefloatParam;
                                 Debug.Assert(new_val != null, "cast failed");
-                                new_val.reload(_struct.tag_data, offset);
+                                new_val.reload(_struct.tag_data, offset, param_key);
                             }continue;
                         case 0x1C:{ // _field_real_euler_angles_3d
                                 TriplefloatParam? new_val = bobject as TriplefloatParam;
                                 Debug.Assert(new_val != null, "cast failed");
-                                new_val.reload(_struct.tag_data, offset);
+                                new_val.reload(_struct.tag_data, offset, param_key);
                             }continue;
                         case 0x1D: // _field_real_plane_2d
                             break;  
@@ -713,12 +719,12 @@ namespace TagEditor.UI.Windows{
                         case 0x23:{ // _field_short_bounds
                                 DoubleshortParam? new_val = bobject as DoubleshortParam;
                                 Debug.Assert(new_val != null, "cast failed");
-                                new_val.reload(_struct.tag_data, offset);
+                                new_val.reload(_struct.tag_data, offset, param_key);
                             }continue;
                         case 0x24:{ // _field_angle_bounds
                                 DoubleangleParam? new_val = bobject as DoubleangleParam;
                                 Debug.Assert(new_val != null, "cast failed");
-                                new_val.reload(_struct.tag_data, offset);
+                                new_val.reload(_struct.tag_data, offset, param_key);
                             }continue;
                         case 0x27: //
                             break;
@@ -749,7 +755,7 @@ namespace TagEditor.UI.Windows{
                         case 0x34: case 0x35:{ // _field_skip // _field_pad
                                 GarbageParameter? new_val = bobject as GarbageParameter;
                                 Debug.Assert(new_val != null, "cast failed");
-                                new_val.reload(_struct.tag_data, offset);
+                                new_val.reload(_struct.tag_data, offset, param_key);
                             }continue;
                         case 0x36:{ // _field_explanation
                                 // do literally nothing, this block is fine as is right now
@@ -762,7 +768,7 @@ namespace TagEditor.UI.Windows{
                         case 0x38:{ // _field_struct 
                                 StructParam? new_val = bobject as StructParam;
                                 Debug.Assert(new_val != null, "cast failed");
-                                new_val.reload(_struct, offset);
+                                new_val.reload(_struct, offset, param_key);
                                 theoretical_line += new_val.parent.total_contained_lines;
                                 // then process children //
                                 if (new_val.parent.is_opened)
@@ -771,7 +777,7 @@ namespace TagEditor.UI.Windows{
                         case 0x39:{ // _field_array
                                 ArrayParam? new_val = bobject as ArrayParam;
                                 Debug.Assert(new_val != null, "cast failed");
-                                new_val.reload(_struct, offset);
+                                new_val.reload(_struct, offset, param_key);
                                 theoretical_line += new_val.parent.total_contained_lines;
                                 // then process children //
                                 if (new_val.parent.is_opened)
@@ -786,7 +792,7 @@ namespace TagEditor.UI.Windows{
 
                                 TagblockParam? new_val = bobject as TagblockParam;
                                 Debug.Assert(new_val != null, "cast failed");
-                                new_val.reload(param_name, _struct.tag_block_refs[(ulong)offset]);
+                                new_val.reload(param_name, _struct.tag_block_refs[(ulong)offset], param_key);
                                 theoretical_line += new_val.parent.total_contained_lines;
                                 // then process children //
                                 if (new_val.parent.is_opened)
@@ -795,12 +801,12 @@ namespace TagEditor.UI.Windows{
                         case 0x41:{ // _field_reference_v2
                                 TagrefParam? new_val = bobject as TagrefParam;
                                 Debug.Assert(new_val != null, "cast failed");
-                                new_val.reload(_struct.tag_data, offset);
+                                new_val.reload(_struct.tag_data, offset, param_key);
                            } continue;
                         case 0x42:{ // _field_data_v2
                                 DataParam? new_val = bobject as DataParam;
                                 Debug.Assert(new_val != null, "cast failed");
-                                new_val.reload(param_name, _struct.tag_resource_refs[(ulong)offset], _struct.tag_data, offset, param_group_sizes[type]);
+                                new_val.reload(param_name, _struct.tag_resource_refs[(ulong)offset], _struct.tag_data, offset, param_group_sizes[type], param_key);
                             }continue;
                         case 0x43:{ // tag_resource // FYI, this is broken & it just constantly loads the same resource struct over & over again
                                 ResourceParam? new_val = bobject as ResourceParam;
@@ -811,7 +817,7 @@ namespace TagEditor.UI.Windows{
                                         new_val.parent.expand(false);
                                     continue;
                                 }
-                                new_val.reload(_struct.tag_block_refs[(ulong)offset]);
+                                new_val.reload(_struct.tag_block_refs[(ulong)offset], param_key);
                                 theoretical_line += new_val.parent.total_contained_lines;
                                 // then process children //
                                 if (new_val.parent.is_opened)
@@ -824,7 +830,7 @@ namespace TagEditor.UI.Windows{
                     } // if we're still here, then the type was unimplemented, create new garbage block
                     GarbageParameter? garb_val = bobject as GarbageParameter;
                     Debug.Assert(garb_val != null, "cast failed");
-                    garb_val.reload(_struct.tag_data, offset);
+                    garb_val.reload(_struct.tag_data, offset, param_key);
                 }
 
                 
@@ -977,21 +983,56 @@ namespace TagEditor.UI.Windows{
             0,   // _3B // end of struct
         };
 
-        struct param_diff{
-            string original_value;
-            string updated_value;
+        // matches literal line index to groups of values
+        Dictionary<int, diffs_clump> diffs_dict = new();
+        // NOTE: WE DEFINITELY NEED A DIRECT ACCESS DICTIONARY SO WE CAN EFFICIENTLY DETERMINE WHETHER A DIFF EXISTS FOR GIVEN UNIQUE IDENTIFIER
+        class diffs_clump { 
+            int current_line_number; // inferred by the key?
             int line_index;
-            int type;
-            UIElement? param_ui;
-            byte[] block;
-            int offset;
+            List<diffs_group> groups;
         }
-        List<param_diff> diffs = new();
+        class diffs_group{
+            int target_line_number;
+            List<param_diff> diffs = new();
+        }
+        class param_diff{
+            public string original_value;
+            public string updated_value;
+            public int type;
+            public string unique_param_id;
+            public UIElement? param_ui;
+            public byte[] block;
+            public int offset;
+        }
+        
 
-        public void set_diff(UIElement element, string param_name, int param_type, string original, string updated, int line_index, byte[] block, int block_offset)
-        {
+        public void set_diff(UIElement element, string key, string param_name, int param_type, string original, string updated, int line_index, byte[] block, int block_offset){
+
+            // NOTE: USE THE KEY SYSTEM TO FIND THE UI ELEMENT!!!
+
             // check to see if we already have this guy for the diff
-            // if we do, we can ignore most of the information as it may no longer be correct, opposed to the original information that we recieved
+            for (int i = 0; i < diffs.Count; i++){
+                if (diffs[i].param_ui == element){
+                    // we can ignore most of the information as it may no longer be correct, opposed to the original information that we recieved
+                    // all we do here is apply the new value
+                    diffs[i].updated_value = updated;
+                    return;
+            }}
+            // if we didn't find a diff already, then we simple create a new diff struct based off the information that we have
+            param_diff param_diff = new();
+            param_diff.original_value = original;
+            param_diff.updated_value = updated;
+            param_diff.type = param_type;
+            param_diff.param_ui = element;
+            param_diff.block = block;
+            param_diff.offset = block_offset;
+            diffs.Add(param_diff);
+            // hm we cant add it until we calculate where the hell it goes
+
+
+            // then we need to apply this to whatever we setup for the UI end of the diff list
+            // like idk, calling a function to figure out what line to put this guy on
+
 
         }
         // we need to iterate through all child params before deleting them

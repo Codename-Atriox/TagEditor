@@ -23,8 +23,10 @@ namespace TagEditor.UI.Interfaces.Editor.Params
     /// </summary>
     public partial class ResourceParam : UserControl
     {
-        public ResourceParam(string name, tagdata_struct _tag_data, expand_link _parent)
+        public string key;
+        public ResourceParam(string name, tagdata_struct _tag_data, expand_link _parent, string _key)
         {
+            key = _key;
 
             InitializeComponent();
 
@@ -32,7 +34,8 @@ namespace TagEditor.UI.Interfaces.Editor.Params
             Namebox.Text = name;
             parent = _parent;
         }
-        public void reload(tagdata_struct _tag_data){
+        public void reload(tagdata_struct _tag_data, string _key){
+            key = _key;
             tag_data = _tag_data;
         }
         public tagdata_struct tag_data;

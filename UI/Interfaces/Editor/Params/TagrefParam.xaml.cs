@@ -19,8 +19,9 @@ using static TagEditor.UI.Windows.TagExplorer;
 
 namespace TagEditor.UI.Interfaces.Params{
     public partial class TagrefParam : UserControl{
-        public TagrefParam(string name, byte[] _parent_block, int _block_offset, TagExplorer _tags_explorer)
-        {
+        public string key;
+        public TagrefParam(string name, byte[] _parent_block, int _block_offset, TagExplorer _tags_explorer, string _key){
+            key = _key;
             tags_explorer = _tags_explorer;
             parent_block = _parent_block;
             block_offset = _block_offset;
@@ -29,7 +30,8 @@ namespace TagEditor.UI.Interfaces.Params{
             Namebox.Text = name;
             is_setting_up = false;
         }
-        public void reload(byte[] _parent_block, int _block_offset){
+        public void reload(byte[] _parent_block, int _block_offset, string _key){
+            key = _key;
             is_setting_up = true;
             parent_block = _parent_block;
             block_offset = _block_offset;

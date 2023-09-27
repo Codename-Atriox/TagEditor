@@ -20,9 +20,10 @@ namespace TagEditor.UI.Interfaces.Editor.Params
     /// </summary>
     public partial class DataParam : UserControl
     {
-        public DataParam(string name, byte[] _datter, byte[] _parent_block, int _block_offset, short _length)
+        public string key;
+        public DataParam(string name, byte[] _datter, byte[] _parent_block, int _block_offset, short _length, string _key)
         {
-
+            key = _key;
             InitializeComponent();
 
             Namebox.Text = name + " [" + _datter.Length + "]";
@@ -31,8 +32,8 @@ namespace TagEditor.UI.Interfaces.Editor.Params
 
             Valuebox.Text = BitConverter.ToString(_parent_block[_block_offset..(_block_offset + _length)]).Replace("-", string.Empty);
         }
-        public void reload(string name, byte[] _datter, byte[] _parent_block, int _block_offset, short _length){
-
+        public void reload(string name, byte[] _datter, byte[] _parent_block, int _block_offset, short _length, string _key){
+            key = _key;
             Namebox.Text = name + " [" + _datter.Length + "]";
             data = _datter;
             Valuebox.Text = BitConverter.ToString(_parent_block[_block_offset..(_block_offset + _length)]).Replace("-", string.Empty);

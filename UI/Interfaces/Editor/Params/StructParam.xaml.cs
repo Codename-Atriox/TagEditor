@@ -22,8 +22,10 @@ namespace TagEditor.UI.Interfaces.Params
     /// </summary>
     public partial class StructParam : UserControl
     {
-        public StructParam(string name, tag.thing _tag_data, int _struct_offset, string _guid, expand_link _parent)
+        public string key;
+        public StructParam(string name, tag.thing _tag_data, int _struct_offset, string _guid, expand_link _parent, string _key)
         {
+            key = _key;
 
             InitializeComponent();
 
@@ -36,7 +38,8 @@ namespace TagEditor.UI.Interfaces.Params
             guid = _guid;
             parent = _parent;
         }
-        public void reload(tag.thing _tag_data, int _struct_offset){
+        public void reload(tag.thing _tag_data, int _struct_offset, string _key){
+            key = _key;
             tag_data = _tag_data;
             struct_offset = _struct_offset; // shouldn't need to be updated?
         }

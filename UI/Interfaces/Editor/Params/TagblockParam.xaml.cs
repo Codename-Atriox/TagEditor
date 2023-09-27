@@ -15,8 +15,10 @@ namespace TagEditor.UI.Interfaces.Editor.Params
     /// </summary>
     public partial class TagblockParam : UserControl
     {
-        public TagblockParam(string name, tagdata_struct _tag_data, expand_link _parent)
+        public string key;
+        public TagblockParam(string name, tagdata_struct _tag_data, expand_link _parent, string _key)
         {
+            key = _key;
 
             InitializeComponent();
 
@@ -26,7 +28,8 @@ namespace TagEditor.UI.Interfaces.Editor.Params
             Namebox.Text = name + " [" + _tag_data.blocks.Count + "]";
             parent = _parent;
         }
-        public void reload(string name, tagdata_struct _tag_data){
+        public void reload(string name, tagdata_struct _tag_data, string _key){
+            key = _key;
             tag_data = _tag_data;
 
             // for the annoying vtable struct that has no name for no reason in particular

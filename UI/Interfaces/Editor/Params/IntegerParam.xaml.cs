@@ -19,7 +19,9 @@ namespace TagEditor.UI.Interfaces.Params{
     /// Interaction logic for IntegerParam.xaml
     /// </summary>
     public partial class IntegerParam : UserControl{
-        public IntegerParam(TagInstance _callback, int _param_type, int _line_index, string name, byte[] _parent_block, int _block_offset, IntType _int_type){
+        public string key;
+        public IntegerParam(TagInstance _callback, int _param_type, int _line_index, string name, byte[] _parent_block, int _block_offset, IntType _int_type, string _key){
+            key = _key;
             callback = _callback;
             line_index = _line_index;
             param_type = _param_type;
@@ -31,7 +33,8 @@ namespace TagEditor.UI.Interfaces.Params{
             Namebox.Text = name;
             is_setting_up = false;
         }
-        public void reload(byte[] _parent_block, int _block_offset){
+        public void reload(byte[] _parent_block, int _block_offset, string _key){
+            key = _key;
             is_setting_up = true;
             parent_block = _parent_block;
             block_offset = _block_offset;
@@ -96,7 +99,7 @@ namespace TagEditor.UI.Interfaces.Params{
             if (is_setting_up) return;
             // we going to call the exception inside the set value function this time
             try{SetValue(this, Valuebox, error_marker, Valuebox.Text, int_type, parent_block, block_offset);
-                callback.set_diff(this, Namebox.Text, param_type, og_value, Valuebox.Text, line_index, parent_block, block_offset);
+                callback.set_diff(this, key, Namebox.Text, param_type, og_value, Valuebox.Text, line_index, parent_block, block_offset);
             }catch { 
                 error_marker.Visibility = Visibility.Visible;
         }}

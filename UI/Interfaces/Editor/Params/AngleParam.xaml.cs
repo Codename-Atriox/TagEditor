@@ -1,19 +1,6 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Reflection.Metadata;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
-using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Navigation;
-using System.Windows.Shapes;
-using System.Xml.Linq;
 using TagEditor.UI.Windows;
 
 namespace TagEditor.UI.Interfaces.Params{
@@ -21,7 +8,9 @@ namespace TagEditor.UI.Interfaces.Params{
     /// Interaction logic for AngleParam.xaml
     /// </summary>
     public partial class AngleParam : UserControl{
-        public AngleParam(TagInstance _callback, int _param_type, int _line_index, string name, byte[] _parent_block, int _block_offset){
+        public string key;
+        public AngleParam(TagInstance _callback, int _param_type, int _line_index, string name, byte[] _parent_block, int _block_offset, string _key){
+            key = _key;
             callback = _callback;
             line_index = _line_index;
             param_type = _param_type;
@@ -32,7 +21,8 @@ namespace TagEditor.UI.Interfaces.Params{
             Namebox.Text = name;
             is_setting_up = false;
         }
-        public void reload(byte[] _parent_block, int _block_offset){
+        public void reload(byte[] _parent_block, int _block_offset, string _key){
+            key = _key;
             is_setting_up = true;
             parent_block = _parent_block;
             block_offset = _block_offset;
@@ -55,7 +45,7 @@ namespace TagEditor.UI.Interfaces.Params{
         private void Button_SaveValue(object sender, TextChangedEventArgs e){
             if (is_setting_up) return;
             try{SetValue(this, Valuebox, error_marker, Convert.ToDouble(Valuebox.Text), parent_block, block_offset);
-                callback.set_diff(this, Namebox.Text, param_type, og_value, Valuebox.Text, line_index, parent_block, block_offset);
+                callback.set_diff(this, key, Namebox.Text, param_type, og_value, Valuebox.Text, line_index, parent_block, block_offset);
             }catch { 
                 error_marker.Visibility = Visibility.Visible;
         }}
