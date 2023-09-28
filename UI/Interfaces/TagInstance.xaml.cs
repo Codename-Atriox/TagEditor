@@ -983,67 +983,308 @@ namespace TagEditor.UI.Windows{
             0,   // _3B // end of struct
         };
 
-        // matches literal line index to groups of values
-        Dictionary<int, diffs_clump> diffs_dict = new();
-        // NOTE: WE DEFINITELY NEED A DIRECT ACCESS DICTIONARY SO WE CAN EFFICIENTLY DETERMINE WHETHER A DIFF EXISTS FOR GIVEN UNIQUE IDENTIFIER
-        class diffs_clump { 
-            int current_line_number; // inferred by the key?
-            int line_index;
-            List<diffs_group> groups;
+        // matches line number to groups of values
+        Dictionary<int, diffs_clump> diffs_ui_dict = new();
+        // matches param diff to their unique key
+        Dictionary<string, param_diff> diffs_dict = new();
+        public class diffs_clump {
+            public DiffExpand ui;
+            public int current_line_number; // inferred by the key?
+            public int line_index;
+            public Dictionary<int, diffs_group> groups; // sorted by target line
         }
-        class diffs_group{
-            int target_line_number;
-            List<param_diff> diffs = new();
+        public class diffs_group{
+            public int target_line_number;
+            // sorted by diff key
+            public Dictionary<string, param_diff> diffs = new();
+            public diffs_clump parent_clump; // so we can clear this if it becomes empty
         }
-        class param_diff{
+        public class param_diff{
+            public string key;
             public string original_value;
             public string updated_value;
             public int type;
-            public string unique_param_id;
             public UIElement? param_ui;
             public byte[] block;
             public int offset;
+            // so we can manage this mess easier
+            public diffs_group line_group;
+        }
+
+        diffs_clump create_diff_clump(int line_number, int line_index){
+            if (diffs_ui_dict.ContainsKey(line_number)) throw new Exception("this clump already exists, cannot create new one with same key");
+
+            diffs_clump new_clump = new();
+            new_clump.current_line_number = line_number;
+            new_clump.line_index = line_index;
+            new_clump.groups = new();
+            new_clump.ui = new(new_clump);
+            diffs_ui_dict[line_number] = new_clump;
+            // add diff to UI then position
+            reposition_diff(new_clump);
+            diffs_panel.Children.Add(new_clump.ui);
+            return new_clump;
+        }
+        void reposition_diff(diffs_clump diff){
+            // instead of passing positions off, we'll just read them from the diffs group
+            diff.ui.RenderTransform = new TranslateTransform(0, diff.line_index * 18);
         }
         
+        public void set_diff(UIElement element, string key, string param_name, int param_type, string original, string updated, int line_number, byte[] block, int block_offset){
 
-        public void set_diff(UIElement element, string key, string param_name, int param_type, string original, string updated, int line_index, byte[] block, int block_offset){
-
-            // NOTE: USE THE KEY SYSTEM TO FIND THE UI ELEMENT!!!
-
-            // check to see if we already have this guy for the diff
-            for (int i = 0; i < diffs.Count; i++){
-                if (diffs[i].param_ui == element){
-                    // we can ignore most of the information as it may no longer be correct, opposed to the original information that we recieved
-                    // all we do here is apply the new value
-                    diffs[i].updated_value = updated;
-                    return;
-            }}
-            // if we didn't find a diff already, then we simple create a new diff struct based off the information that we have
-            param_diff param_diff = new();
-            param_diff.original_value = original;
-            param_diff.updated_value = updated;
-            param_diff.type = param_type;
-            param_diff.param_ui = element;
-            param_diff.block = block;
-            param_diff.offset = block_offset;
-            diffs.Add(param_diff);
-            // hm we cant add it until we calculate where the hell it goes
-
-
-            // then we need to apply this to whatever we setup for the UI end of the diff list
-            // like idk, calling a function to figure out what line to put this guy on
-
+            diffs_dict.TryGetValue(key, out param_diff? diff_object);
+            if (diff_object != null){
+                // ok easy, just update the value
+                diff_object.updated_value = updated;
+            } else{ // if we didn't find a diff already, then we simple create a new diff struct based off the information that we have
+                diff_object = new();
+                diff_object.key = key;
+                diff_object.original_value = original;
+                diff_object.updated_value = updated;
+                diff_object.type = param_type;
+                diff_object.param_ui = element;
+                diff_object.block = block;
+                diff_object.offset = block_offset;
+                // now we need to figure out where to put this in the UI
+                // calculate best spot to enter this at
+                int best_line_index = 0; // fallback to root
+                int best_line_number = 0;
+                for(int i = 0; i < line_indexes.Count; i++){
+                    int current_line_number = Convert.ToInt32(line_indexes[i]);
+                    if (current_line_number < line_number){
+                        best_line_index = i;
+                        best_line_number = current_line_number;
+                }}
+                // now we have to find the clump & update the clump info
+                diffs_ui_dict.TryGetValue(best_line_number, out diffs_clump? clump);
+                if (clump == null){
+                    clump = create_diff_clump(best_line_number, best_line_index);
+                    diffs_ui_dict[best_line_number] = clump;
+                }
+                // get/create diff group
+                clump.groups.TryGetValue(best_line_number, out diffs_group? diff_group);
+                if (diff_group == null){
+                    diff_group = new();
+                    diff_group.parent_clump = clump;
+                    diff_group.target_line_number = line_number;
+                    diff_group.diffs = new();
+                }
+                // error check to see if this diff already exists?
+                if (diff_group.diffs.ContainsKey(key))
+                    throw new Exception("param diff was already contained within diff line group");
+                diff_group.diffs[key] = diff_object;
+                // then assign that info to our quick diff list
+                diff_object.line_group = diff_group;
+                diffs_dict[key] = diff_object;
+            }
 
         }
         // we need to iterate through all child params before deleting them
         // so we unhook their references, allowing them to be garbage collected
-        public void unhook_diff(UIElement element)
-        {
-
+        // call this on every single key that gets destroyed when children of closed struct are cleared
+        public void try_unhook_diff(string key){
+            diffs_dict.TryGetValue(key, out param_diff? diff_object);
+            if (diff_object != null) diff_object.param_ui = null;
         }
-        public void try_unhooking_children_before_clearing()
-        {
-
+        // call this whenever creating a new ui param
+        public void try_hook_diff(UIElement paramui, string key){
+            diffs_dict.TryGetValue(key, out param_diff? diff_object);
+            if (diff_object != null) diff_object.param_ui = paramui;
+        }
+        public void revert_diff(param_diff diff){
+            // remove this diff, as it is no longer needed
+            remove_diff(diff);
+            // then apply the revert
+            switch (diff.type){
+                case 0x0: // _field_string
+                    StringParam.revert_value(diff.original_value, 32, diff.param_ui as StringParam, diff.block, diff.offset);
+                    return;  
+                case 0x1: // _field_long_string
+                    StringParam.revert_value(diff.original_value, 256, diff.param_ui as StringParam, diff.block, diff.offset);
+                    return; 
+                case 0x2: // _field_string_id
+                    HashParam.revert_value(diff.original_value, diff.param_ui as HashParam, diff.block, diff.offset);
+                    return;
+                case 0x3: //
+                break;  
+                case 0x4: // _field_char_integer
+                    IntegerParam.revert_value(diff.original_value, IntegerParam.IntType.signed_char,  diff.param_ui as IntegerParam, diff.block, diff.offset);
+                    return;  
+                case 0x5: // _field_short_integer
+                    IntegerParam.revert_value(diff.original_value, IntegerParam.IntType.signed_short, diff.param_ui as IntegerParam, diff.block, diff.offset);
+                    return;  
+                case 0x6: // _field_long_integer
+                    IntegerParam.revert_value(diff.original_value, IntegerParam.IntType.signed_int, diff.param_ui as IntegerParam, diff.block, diff.offset);
+                    return;  
+                case 0x7: // _field_int64_integer
+                    IntegerParam.revert_value(diff.original_value, IntegerParam.IntType.signed_long, diff.param_ui as IntegerParam, diff.block, diff.offset);
+                    return;  
+                case 0x8: // _field_angle
+                    AngleParam.revert_value(diff.original_value, diff.param_ui as AngleParam, diff.block, diff.offset);
+                    return;
+                case  0x9: // _field_tag
+                break;  
+                case  0xA: // _field_char_enum
+                    EnumParam.revert_value(diff.original_value, EnumParam.EnumType._byte, diff.param_ui as EnumParam, diff.block, diff.offset);
+                    return;
+                case  0xB: // _field_short_enum
+                    EnumParam.revert_value(diff.original_value, EnumParam.EnumType._short, diff.param_ui as EnumParam, diff.block, diff.offset);
+                    return;
+                case  0xC: // _field_long_enum
+                    EnumParam.revert_value(diff.original_value, EnumParam.EnumType._int, diff.param_ui as EnumParam, diff.block, diff.offset);
+                    return;
+                case  0xD: // _field_long_flags
+                    FlagsParam.revert_value(diff.original_value, FlagsParam.FlagType._int, diff.param_ui as FlagsParam, diff.block, diff.offset);
+                    return;
+                case  0xE: // _field_word_flags
+                    FlagsParam.revert_value(diff.original_value, FlagsParam.FlagType._short, diff.param_ui as FlagsParam, diff.block, diff.offset);
+                    return;
+                case  0xF: // _field_byte_flags
+                    FlagsParam.revert_value(diff.original_value, FlagsParam.FlagType._byte, diff.param_ui as FlagsParam, diff.block, diff.offset);
+                    return;
+                case 0x10: // _field_point_2d
+                    DoubleshortParam.revert_value(diff.original_value, diff.param_ui as DoubleshortParam, diff.block, diff.offset);
+                    return;
+                case 0x11: // _field_rectangle_2d
+                    DoubleshortParam.revert_value(diff.original_value, diff.param_ui as DoubleshortParam, diff.block, diff.offset);
+                    return;
+                case 0x12: // _field_rgb_color
+                break;  
+                case 0x13: // _field_argb_color 
+                break;   
+                case 0x14: // _field_real
+                    FloatParam.revert_value(diff.original_value, diff.param_ui as FloatParam, diff.block, diff.offset);
+                    return;  
+                case 0x15: // _field_real_fraction
+                    FloatParam.revert_value(diff.original_value, diff.param_ui as FloatParam, diff.block, diff.offset);
+                    return;  
+                case 0x16: // _field_real_point_2d
+                    DoublefloatParam.revert_value(diff.original_value, diff.param_ui as DoublefloatParam, diff.block, diff.offset);
+                    return;
+                case 0x17: // _field_real_point_3d
+                    TriplefloatParam.revert_value(diff.original_value, diff.param_ui as TriplefloatParam, diff.block, diff.offset);
+                    return;
+                case 0x18: // _field_real_vector_2d
+                    DoublefloatParam.revert_value(diff.original_value, diff.param_ui as DoublefloatParam, diff.block, diff.offset);
+                    return;
+                case 0x19: // _field_real_vector_3d
+                    TriplefloatParam.revert_value(diff.original_value, diff.param_ui as TriplefloatParam, diff.block, diff.offset);
+                    return;
+                case 0x1A:  // _field_real_quaternion
+                break; 
+                case 0x1B: // _field_real_euler_angles_2d
+                    DoublefloatParam.revert_value(diff.original_value, diff.param_ui as DoublefloatParam, diff.block, diff.offset);
+                    return;
+                case 0x1C: // _field_real_euler_angles_3d
+                    TriplefloatParam.revert_value(diff.original_value, diff.param_ui as TriplefloatParam, diff.block, diff.offset);
+                    return;
+                case 0x1D: // _field_real_plane_2d
+                break;  
+                case 0x1E: // _field_real_plane_3d
+                break;  
+                case 0x1F: // _field_real_rgb_color
+                break;  
+                case 0x20: // _field_real_argb_color
+                break;  
+                case 0x21: // _field_real_hsv_color
+                break;  
+                case 0x22: // _field_real_ahsv_color
+                break;  
+                case 0x23: // _field_short_bounds
+                    DoubleshortParam.revert_value(diff.original_value, diff.param_ui as DoubleshortParam, diff.block, diff.offset);
+                    return;
+                case 0x24: // _field_angle_bounds
+                    DoubleangleParam.revert_value(diff.original_value, diff.param_ui as DoubleangleParam, diff.block, diff.offset);
+                    return;
+                case 0x25: // _field_real_bounds
+                    DoublefloatParam.revert_value(diff.original_value, diff.param_ui as DoublefloatParam, diff.block, diff.offset);
+                    return;
+                case 0x26: // _field_real_fraction_bounds
+                    DoublefloatParam.revert_value(diff.original_value, diff.param_ui as DoublefloatParam, diff.block, diff.offset);
+                    return;
+                case 0x27: //
+                break;
+                case 0x28: //
+                break;
+                case 0x29: // _field_long_block_flags
+                break;
+                case 0x2A: // _field_word_block_flags
+                break;
+                case 0x2B: // _field_byte_block_flags
+                break;
+                case 0x2C: // _field_char_block_index
+                break;
+                case 0x2D: // _field_custom_char_block_index
+                break;
+                case 0x2E: // _field_short_block_index
+                break;
+                case 0x2F: // _field_custom_short_block_index
+                break;
+                case 0x30: // _field_long_block_index
+                break;
+                case 0x31: // _field_custom_long_block_index
+                break;
+                case 0x32: // 
+                break;
+                case 0x33: // 
+                break;
+                case 0x34: case 0x35: // _field_skip // _field_pad
+                    GarbageParameter.revert_value(diff.original_value, diff.param_ui as GarbageParameter, diff.block, diff.offset);
+                    return;
+                case 0x36: // _field_explanation
+                    throw new Exception("param type Comment cannot be reverted, nor have a diff");
+                case 0x37: // _field_custom
+                    throw new Exception("param type Comment cannot be reverted, nor have a diff");
+                case 0x38: // _field_struct 
+                    throw new Exception("param type Struct cannot be reverted, nor have a diff");
+                case 0x39: // _field_array
+                    throw new Exception("param type Array cannot be reverted, nor have a diff");
+                case 0x3A: // 
+                break;
+                case 0x3B: // end of struct
+                    throw new Exception("param type End of struct cannot be reverted, nor have a diff");
+                case 0x3C: // _field_byte_integer
+                    IntegerParam.revert_value(diff.original_value, IntegerParam.IntType.unsigned_char, diff.param_ui as IntegerParam, diff.block, diff.offset);
+                    return;
+                case 0x3D: // _field_word_integer
+                    IntegerParam.revert_value(diff.original_value, IntegerParam.IntType.unsigned_short, diff.param_ui as IntegerParam, diff.block, diff.offset);
+                    return;
+                case 0x3E: // _field_dword_integer
+                    IntegerParam.revert_value(diff.original_value, IntegerParam.IntType.unsigned_int, diff.param_ui as IntegerParam, diff.block, diff.offset);
+                    return;
+                case 0x3F: // _field_qword_integer
+                    IntegerParam.revert_value(diff.original_value, IntegerParam.IntType.unsigned_long, diff.param_ui as IntegerParam, diff.block, diff.offset);
+                    return;
+                case 0x40: // _field_block_v2
+                    throw new Exception("Unimplemented revert type!!"); //TagblockParam
+                case 0x41: // _field_reference_v2
+                    throw new Exception("Unimplemented revert type!!"); //TagrefParam
+                case 0x42: // _field_data_v2
+                    throw new Exception("Unimplemented revert type!!"); //DataParam
+                case 0x43: // tag_resource
+                    throw new Exception("Unimplemented revert type!!"); //ResourceParam
+                case 0x44: // UNKNOWN
+                break;
+                case 0x45: // UNKNOWN
+                break;
+            } // if we're still here, then the type was unimplemented, create new garbage block
+            GarbageParameter.revert_value(diff.original_value, diff.param_ui as GarbageParameter, diff.block, diff.offset);
+        }
+        public void remove_diff(param_diff diff){
+            // this should only be called when we either revert a diff, or we saved changes?
+            // essentially just untie all references to the diff, and any containers that then become empty without the diff
+            diffs_dict.Remove(diff.key);
+            diff.line_group.diffs.Remove(diff.key);
+            diffs_clump clump = diff.line_group.parent_clump;
+            clump.ui.reload(); // to update the visual elements if its open?
+            if (diff.line_group.diffs.Count == 0){
+                clump.groups.Remove(diff.line_group.target_line_number);
+                // now if the clump is empty remove that too
+                if (clump.groups.Count == 0){
+                    diffs_ui_dict.Remove(clump.current_line_number);
+                    diffs_panel.Children.Remove(clump.ui);
+                    clump.ui.clear_references();
+            }}
         }
 
         // these should all be correct except for the unknown/unlabelled ones
