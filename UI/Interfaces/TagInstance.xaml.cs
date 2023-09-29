@@ -1062,12 +1062,13 @@ namespace TagEditor.UI.Windows{
                     diffs_ui_dict[best_line_number] = clump;
                 }
                 // get/create diff group
-                clump.groups.TryGetValue(best_line_number, out diffs_group? diff_group);
+                clump.groups.TryGetValue(line_number, out diffs_group? diff_group);
                 if (diff_group == null){
                     diff_group = new();
                     diff_group.parent_clump = clump;
                     diff_group.target_line_number = line_number;
                     diff_group.diffs = new();
+                    clump.groups[line_number] = diff_group;
                 }
                 // error check to see if this diff already exists?
                 if (diff_group.diffs.ContainsKey(key))

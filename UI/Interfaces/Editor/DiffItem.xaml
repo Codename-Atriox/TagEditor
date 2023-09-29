@@ -1,0 +1,31 @@
+﻿<UserControl x:Class="TagEditor.UI.Interfaces.Editor.DiffItem"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:local="clr-namespace:TagEditor.UI.Interfaces.Editor"
+             mc:Ignorable="d" 
+             d:DesignHeight="41" d:DesignWidth="400">
+    <Grid Margin="0,0,0,5">
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="50"/>
+            <ColumnDefinition Width="90"/>
+            <ColumnDefinition Width="*"/>
+        </Grid.ColumnDefinitions>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="18"/>
+            <RowDefinition Height="18"/>
+        </Grid.RowDefinitions>
+        <Grid Grid.Row="0" Grid.ColumnSpan="3" Background="#3c0000"/>
+        <Grid Grid.Row="1" Grid.ColumnSpan="3" Background="#265e4d"/>
+
+        <TextBlock x:Name="line_0" Text="NULL" Grid.Row="0" HorizontalAlignment="Right" Foreground="White" Margin="0,0,10,0" VerticalAlignment="Center"/>
+        <TextBlock x:Name="line_1" Text="NULL" Grid.Row="1" HorizontalAlignment="Right" Foreground="White" Margin="0,0,10,0" VerticalAlignment="Center"/>
+
+        <TextBlock x:Name="type_0" Text="NULL" Grid.Column="1" Grid.Row="0" Foreground="#FF00A6FF" Margin="0,0,10,0" VerticalAlignment="Center"/>
+        <TextBlock x:Name="type_1" Text="NULL" Grid.Column="1" Grid.Row="1" Foreground="#FF00A6FF" Margin="0,0,10,0" VerticalAlignment="Center"/>
+
+        <TextBlock x:Name="old_value" Text="NULL" Grid.Column="2" Grid.Row="0" Foreground="#FFAEC07B" Margin="0,0,10,0" VerticalAlignment="Center"/>
+        <TextBlock x:Name="new_value" Text="NULL" Grid.Column="2" Grid.Row="1" Foreground="#FFAEC07B" Margin="0,0,10,0" VerticalAlignment="Center"/>
+    </Grid>
+</UserControl>
