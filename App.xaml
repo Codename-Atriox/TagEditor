@@ -8,6 +8,63 @@
 
         <SolidColorBrush x:Key="_Global.Border" Color="#FF3D3D3D"/>
         <SolidColorBrush x:Key="_Global.Text" Color="#FFD6D6D6"/>
+        <SolidColorBrush x:Key="_Global.Text1" Color="#FFD6D6D6"/>
+        <SolidColorBrush x:Key="_Global.Unimplemented1" Color="#FF00FF00"/>
+        <SolidColorBrush x:Key="_Global.Hover.Background1" Color="#FF383838"/>
+        <SolidColorBrush x:Key="_Global.Hover.Border1" Color="#FF4D4D4D"/>
+        <Style x:Key="FocusVisual1">
+            <Setter Property="Control.Template">
+                <Setter.Value>
+                    <ControlTemplate>
+                        <Rectangle Margin="2" StrokeDashArray="1 2" Stroke="{DynamicResource {x:Static SystemColors.ControlTextBrushKey}}" SnapsToDevicePixels="true" StrokeThickness="1"/>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+        <SolidColorBrush x:Key="_Global.Activated1" Color="#FF7160E8"/>
+
+
+
+        <SolidColorBrush x:Key="_diff.border" Color="#FF10D400"/>
+        <SolidColorBrush x:Key="_diff.background" Color="#FF00801D"/>
+        <SolidColorBrush x:Key="_diff.hover.border" Color="#FF12F100"/>
+        <SolidColorBrush x:Key="_diff.hover.background" Color="#FF12F100"/>
+        <SolidColorBrush x:Key="_diff.press.border" Color="#FF91FF88"/>
+        <SolidColorBrush x:Key="_diff.press.background" Color="#FF12F100"/>
+        <Style x:Key="DiffStyle" TargetType="{x:Type Button}">
+            <Setter Property="FocusVisualStyle" Value="{StaticResource FocusVisual1}"/>
+            <Setter Property="Background" Value="{StaticResource _diff.background}"/>
+            <Setter Property="BorderBrush" Value="{StaticResource _diff.border}"/>
+            <Setter Property="Foreground" Value="{StaticResource _Global.Text1}"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="HorizontalContentAlignment" Value="Center"/>
+            <Setter Property="VerticalContentAlignment" Value="Center"/>
+            <Setter Property="Padding" Value="1"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="{x:Type Button}">
+                        <Border x:Name="border" Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}" SnapsToDevicePixels="true">
+                            <ContentPresenter x:Name="contentPresenter" Focusable="False" HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}" Margin="{TemplateBinding Padding}" RecognizesAccessKey="True" SnapsToDevicePixels="{TemplateBinding SnapsToDevicePixels}" VerticalAlignment="{TemplateBinding VerticalContentAlignment}"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsDefaulted" Value="true">
+                                <Setter Property="BorderBrush" TargetName="border" Value="{DynamicResource {x:Static SystemColors.HighlightBrushKey}}"/>
+                            </Trigger>
+                            <Trigger Property="IsMouseOver" Value="true">
+                                <Setter Property="Background" TargetName="border" Value="{StaticResource _diff.hover.background}"/>
+                                <Setter Property="BorderBrush" TargetName="border" Value="{StaticResource _diff.hover.border}"/>
+                            </Trigger>
+                            <Trigger Property="IsPressed" Value="true">
+                                <Setter Property="Background" TargetName="border" Value="{StaticResource _diff.press.border}"/>
+                                <Setter Property="BorderBrush" TargetName="border" Value="{StaticResource _diff.press.border}"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+        
+        
         <SolidColorBrush x:Key="_Global.Background.Light" Color="#FF1F1F1F"/>
         <SolidColorBrush x:Key="_Global.Background.Dark" Color="#FF1A1A1A"/>
         <SolidColorBrush x:Key="_Global.Unimplemented" Color="#FF00FF00"/>
@@ -434,6 +491,7 @@
             <Setter Property="Background" Value="Transparent"/>
             <Setter Property="BorderBrush" Value="{x:Null}"/>
             <Setter Property="Foreground" Value="{StaticResource _Global.Text}"/>
+            <Setter Property="CaretBrush" Value="White"/>
             <Setter Property="BorderThickness" Value="1"/>
             <Setter Property="KeyboardNavigation.TabNavigation" Value="None"/>
             <Setter Property="HorizontalContentAlignment" Value="Left"/>

@@ -16,7 +16,7 @@
         <TextBlock x:Name="Namebox" Text="SampleParamName" Foreground="#FFD6D6D6" Margin="0,0,5,0" />
         <Grid Grid.Column="1">
             <Button x:Name="ValueBox" Content="SampleFlag1 SampleFlag2" Foreground="#FFEA5B5B" Click="Open_Dropdown"/>
-            <Popup x:Name="popup_thing" IsOpen="False" LostFocus="Popup_LostFocus" StaysOpen="False">
+            <Popup x:Name="popup_thing" IsOpen="False" LostFocus="Popup_LostFocus" StaysOpen="False" PopupAnimation="Slide" AllowsTransparency="True">
                 <ScrollViewer x:Name="box_thinger" BorderThickness="1" BorderBrush="#FF8A8A8A">
                     <StackPanel x:Name="popup_panel" Background="#FF414141">
 

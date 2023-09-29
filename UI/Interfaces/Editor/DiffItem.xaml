@@ -11,13 +11,14 @@
             <ColumnDefinition Width="50"/>
             <ColumnDefinition Width="90"/>
             <ColumnDefinition Width="*"/>
+            <ColumnDefinition Width="20"/>
         </Grid.ColumnDefinitions>
         <Grid.RowDefinitions>
             <RowDefinition Height="18"/>
             <RowDefinition Height="18"/>
         </Grid.RowDefinitions>
-        <Grid Grid.Row="0" Grid.ColumnSpan="3" Background="#3c0000"/>
-        <Grid Grid.Row="1" Grid.ColumnSpan="3" Background="#265e4d"/>
+        <Grid Grid.Row="0" Grid.ColumnSpan="4" Background="#3c0000"/>
+        <Grid Grid.Row="1" Grid.ColumnSpan="4" Background="#265e4d"/>
 
         <TextBlock x:Name="line_0" Text="NULL" Grid.Row="0" HorizontalAlignment="Right" Foreground="White" Margin="0,0,10,0" VerticalAlignment="Center"/>
         <TextBlock x:Name="line_1" Text="NULL" Grid.Row="1" HorizontalAlignment="Right" Foreground="White" Margin="0,0,10,0" VerticalAlignment="Center"/>
@@ -27,5 +28,7 @@
 
         <TextBlock x:Name="old_value" Text="NULL" Grid.Column="2" Grid.Row="0" Foreground="#FFAEC07B" Margin="0,0,10,0" VerticalAlignment="Center"/>
         <TextBlock x:Name="new_value" Text="NULL" Grid.Column="2" Grid.Row="1" Foreground="#FFAEC07B" Margin="0,0,10,0" VerticalAlignment="Center"/>
+
+        <Button Grid.Column="3" Grid.Row="1" Content="x" Click="Button_Click" Padding="1,-7,1,0" Foreground="#FFFF2C2C" FontSize="18"/>
     </Grid>
 </UserControl>

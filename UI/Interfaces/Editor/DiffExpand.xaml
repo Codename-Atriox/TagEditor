@@ -5,9 +5,9 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
              xmlns:local="clr-namespace:TagEditor.UI.Interfaces.Editor"
              mc:Ignorable="d" >
-    <Grid HorizontalAlignment="Right" Width="4" Height="18" Background="#FF00801D">
-        <Button BorderThickness="1" BorderBrush="#FF10D400" Click="Button_Click"/>
-        <Popup x:Name="diff_popup" IsOpen="False" LostFocus="Popup_LostFocus" StaysOpen="False">
+    <Grid HorizontalAlignment="Right" Height="18" Width="4" >
+        <Button Style="{DynamicResource DiffStyle}" BorderThickness="1"  Click="Button_Click"/>
+        <Popup x:Name="diff_popup" IsOpen="False" LostFocus="Popup_LostFocus" StaysOpen="False" PopupAnimation="Slide" AllowsTransparency="True">
             <Border BorderThickness="1" Background="#FF1A1A1A" BorderBrush="#FF7160E8">
                 <ScrollViewer x:Name="scroll_panel">
                     <Grid>

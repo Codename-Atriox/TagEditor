@@ -13,6 +13,7 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
+using TagEditor.UI.Windows;
 using static TagEditor.UI.Windows.TagInstance;
 
 namespace TagEditor.UI.Interfaces.Editor
@@ -23,8 +24,11 @@ namespace TagEditor.UI.Interfaces.Editor
     public partial class DiffExpand : UserControl
     {
         diffs_clump? parent;
-        public DiffExpand(diffs_clump _parent){
+        TagInstance callback;
+        public DiffExpand(diffs_clump _parent, TagInstance _callback)
+        {
             parent = _parent;
+            callback = _callback;
             InitializeComponent();
         }
         public void reload() {
@@ -36,7 +40,7 @@ namespace TagEditor.UI.Interfaces.Editor
             content_panel.Children.Clear();
             foreach (var diff_group in parent.groups){
                 foreach (var diff in diff_group.Value.diffs){
-                    var new_item = new DiffItem(diff_group.Value.target_line_number.ToString(), group_names[diff.Value.type], diff.Value.original_value, diff.Value.updated_value);
+                    var new_item = new DiffItem(callback, diff.Value);
                     //new_item.LostFocus += Popup_LostFocus();
                     content_panel.Children.Add(new_item);
                     diffs_count++;
@@ -66,8 +70,8 @@ namespace TagEditor.UI.Interfaces.Editor
         }
         private void Popup_LostFocus(object sender, RoutedEventArgs e){ // close popup & save selected values
 
-                diff_popup.IsOpen = false;
-                content_panel.Children.Clear();
+                //diff_popup.IsOpen = false;
+                //content_panel.Children.Clear();
         }
     }
 }
