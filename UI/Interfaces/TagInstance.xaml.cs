@@ -346,7 +346,7 @@ namespace TagEditor.UI.Windows{
                         int next_best_line_number = expanded_clump.current_line_number;
                         int next_best_line_index = expanded_clump.line_index;
                         for (int i = 1; i <= num_of_lines_changed; i++){
-                            int current_line_number = Convert.ToInt32(line_indexes[i]);
+                            int current_line_number = Convert.ToInt32(line_indexes[at_line + i]);
                             if (current_line_number <= diff_group.Value.target_line_number){
                                 next_best_line_number = current_line_number;
                                 next_best_line_index = at_line + i;
@@ -376,10 +376,9 @@ namespace TagEditor.UI.Windows{
                         // then all its child components were moved and we should delete this clump
                         remove_diffs_clump(expanded_clump);
                     } else { // we need to remove all the items that are now in other clumps
-                        foreach (int key in removed_groups){
+                        foreach (int key in removed_groups)
                             expanded_clump.groups.Remove(key);
-                            expanded_clump.ui.reload();
-                        }
+                        expanded_clump.ui.reload();
                     }
                 }
             }
