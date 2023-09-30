@@ -78,12 +78,11 @@
         </Grid>
         <Grid Grid.Row="1">
             <StackPanel FlowDirection="LeftToRight" Grid.Row="1" Orientation="Horizontal" Margin="5,0,0,0">
-                <Button Content="SV" Width="20"/>
-                <Button Content="SA" Width="20"/>
-                <Button Content="SF" Width="20"/>
+                <Button Content="UF" ToolTip="Unpack Active tag from module" Width="20" Click="Button_UnpackTag"/>
+                <Button Content="EF" ToolTip="Export Active loaded/Edited tag" Width="20" Click="Button_ExportTag"/>
                 <Separator Width="1" Height="15" Style="{StaticResource {x:Static ToolBar.SeparatorStyleKey}}" Background="#FF3D3D3D" Margin="4,2,4,2" />
-                <Button Content="TA" Width="20" Click="Button_OpenTag"/>
-                <Button Content="FO" Width="20" Click="TagExplorer_OpenDirectory"/>
+                <Button Content="OT" Width="20" Click="Button_OpenTag"/>
+                <Button Content="OD" Width="20" Click="TagExplorer_OpenDirectory"/>
             </StackPanel>
         </Grid>
 

@@ -70,9 +70,10 @@ namespace TagEditor.UI.Interfaces.Editor.Params
             direction += selected_index;
 
             if (direction < length && 0 <= direction){
+                int old_index = selected_index;
                 selected_index = direction;
                 indexbox.Text = selected_index.ToString();
-                if (parent.is_opened) parent.expand(true);
+                if (parent.is_opened) parent.expand(true, old_index);
         }}
 
         private void TextBox_KeyDown(object sender, KeyEventArgs e){ // test for enter, if so then
@@ -83,8 +84,10 @@ namespace TagEditor.UI.Interfaces.Editor.Params
                 try{int new_index = Convert.ToInt32(indexbox.Text);
                     if (new_index == selected_index && (!parent.is_opened)) return;
                     if (new_index < length && 0 <= new_index){
+                        int old_index = selected_index;
+                        selected_index = new_index;
                         indexbox.Text = selected_index.ToString();
-                        parent.expand(true);
+                        parent.expand(true, old_index);
                         return;
                 }} catch{}
                 indexbox.Text = selected_index.ToString();

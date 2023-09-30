@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Net.Mail;
@@ -15,6 +16,7 @@ namespace TagEditor.UI.Windows{
             main = _main;
         }
         MainWindow main;
+        List<string> tab_keys = new();
         Dictionary<string, TagInstance> Tabs = new();
         public void OpenTag(string tag_path, string plugins_path){
             if (Tabs.ContainsKey(tag_path)){
@@ -37,7 +39,7 @@ namespace TagEditor.UI.Windows{
                     return;
             }}
             // check to see if the name is a resource file name
-            if (tag_path.Contains("[")){
+            if (tag_path.Contains("_res_")){
                 main.DisplayNote(tag_path + " appears to be a tag struct resource file, not a real tag", null, error_level.WARNING);
                 return;
             }
@@ -77,18 +79,18 @@ namespace TagEditor.UI.Windows{
 
 
             tag test = new tag(plugins_path, resource_list);
-            try{
-                byte[] tagbytes = File.ReadAllBytes(tag_path);
+            byte[] tagbytes;
+            try{tagbytes = File.ReadAllBytes(tag_path);
                 if (!test.Load_tag_file(tagbytes)){
                     main.DisplayNote(tag_path + " was not able to be loaded as a tag", null, error_level.WARNING);
                     return;
-            }} catch{ main.DisplayNote(tag_path + " returned an error (likely due to file read attempt)", null, error_level.WARNING);}
+            }} catch{ main.DisplayNote(tag_path + " returned an error (likely due to file read attempt)", null, error_level.WARNING); return;}
 
             // load new tag tab here
             TabItem new_tag = new();
-            new_tag.Header = Path.GetFileName(tag_path);
+            TagInstance tag_interface = new TagInstance(main, test, new_tag, Path.GetFileName(tag_path), tagbytes);
             TagsTabs.Items.Add(new_tag);
-            TagInstance tag_interface = new TagInstance(main, test, new_tag);
+            tab_keys.Add(tag_path);
             Tabs.Add(tag_path, tag_interface);
             tag_interface.LoadTag_UI();
             TagsTabs.SelectedIndex = TagsTabs.Items.IndexOf(tag_interface.container);
@@ -107,7 +109,7 @@ namespace TagEditor.UI.Windows{
                 main.DisplayNote(item.name + " is a local-disk tag, not a module tag!!", null, error_level.WARNING);
                 return;}
             // check to see if the name is a resource file name
-            if (item.name.Contains("[")){
+            if (item.name.Contains("_res_")){
                 main.DisplayNote(item.name + " appears to be a tag struct resource file, not a real tag", null, error_level.WARNING);
                 return;}
 
@@ -169,12 +171,21 @@ namespace TagEditor.UI.Windows{
 
             // load new tag tab here
             TabItem new_tag = new();
-            new_tag.Header = Path.GetFileName(item.name);
+            TagInstance tag_interface = new TagInstance(main, test, new_tag, item.alias, tagbytes);
             TagsTabs.Items.Add(new_tag);
-            TagInstance tag_interface = new TagInstance(main, test, new_tag);
+            tab_keys.Add(item.name);
             Tabs.Add(item.name, tag_interface);
             tag_interface.LoadTag_UI();
+            tag_interface.module_file_header = item.module_file;
             TagsTabs.SelectedIndex = TagsTabs.Items.IndexOf(tag_interface.container);
         }
+
+        private TagInstance get_active_window(){
+            // we have to update this when we remove the test tab
+            if (TagsTabs.SelectedIndex <= 0) throw new Exception("active window not valid");
+            return Tabs[tab_keys[TagsTabs.SelectedIndex - 1]];
+        }
+        public void UnpackTag() => get_active_window().unpack_to_files();
+        public void ExportTag() => get_active_window().export_loaded_to_files();
     }
 }

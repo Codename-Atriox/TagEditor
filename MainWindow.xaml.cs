@@ -123,18 +123,22 @@ namespace TagEditor
             Microsoft.Win32.OpenFileDialog dlg = new Microsoft.Win32.OpenFileDialog();
             if (dlg.ShowDialog() == true) TagViewer_OpenTag(dlg.FileName);
         }
-        public void TagViewer_OpenTag(string tag_path) {
-            // TODO: if active tag viewer is null, open a new one
-            Active_TagViewer.OpenTag(tag_path, plugins_path);
-        }
+        public void TagViewer_OpenTag(string tag_path) 
+            => Active_TagViewer.OpenTag(tag_path, plugins_path);
         public void TagViewer_OpenModuleTag(directory_item tag_item)
-        {
-            // TODO: if active tag viewer is null, open a new one
-            Active_TagViewer.OpenModuleTag(tag_item, plugins_path);
-        }
+            => Active_TagViewer.OpenModuleTag(tag_item, plugins_path);
         public void TagViewer_UpdateModules(List<module_structs.module> modules)
-        {
-            Active_ModuleViewer.update_modules(modules);
+            => Active_ModuleViewer.update_modules(modules);
+        public void TagViewer_UpdateModulesStats()
+            => Active_ModuleViewer.update_module_stats();
+
+        private void Button_UnpackTag(object sender, RoutedEventArgs e){
+            try{Active_TagViewer.UnpackTag();
+            } catch (Exception ex){DisplayNote("Couldn't export tag (likely because you dont have a valid one open)", ex, error_level.NOTE);}
+        }
+        private void Button_ExportTag(object sender, RoutedEventArgs e){
+            try{Active_TagViewer.ExportTag();
+            } catch (Exception ex){DisplayNote("Couldn't export tag (likely because you dont have a valid one open)", ex, error_level.NOTE);}
         }
     }
 }

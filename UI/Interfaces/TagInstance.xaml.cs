@@ -25,22 +25,33 @@ using System.Collections.ObjectModel;
 using TagEditor.UI.Interfaces.Editor.Params;
 using static TagEditor.MainWindow;
 using static TagEditor.UI.Windows.TagInstance;
+using Infinite_module_test;
+using Microsoft.Win32;
 
 namespace TagEditor.UI.Windows{
     public partial class TagInstance : UserControl{
-        public TagInstance(MainWindow _main, tag _loaded_tag, TabItem _container){
+        public TagInstance(MainWindow _main, tag _loaded_tag, TabItem _container, string tabitem_name, byte[] _raw_tagbytes)
+        {
             InitializeComponent();
             main = _main;
             loaded_tag = _loaded_tag;
             container = _container;
             container.Content = this;
 
+            container.Header = tabitem_name;
+            tabname = tabitem_name;
+
             indexes_panel.ItemsSource = line_indexes;
             types_panel.ItemsSource = line_groups;
+            raw_tagbytes = _raw_tagbytes;
         }
         MainWindow main;
         public TabItem container;
+        string tabname;
         tag loaded_tag;
+        byte[] raw_tagbytes;
+
+        public module_structs.module.unpacked_module_file? module_file_header;
         expand_link root_expand;
         public void LoadTag_UI(){
             if (loaded_tag.root.blocks.Count != 1)
@@ -119,8 +130,7 @@ namespace TagEditor.UI.Windows{
                     v.Value.is_on_screen = false;
                 }
             }
-            public void unhook_children()
-            {
+            public void unhook_children(int previous_selected_index = -1){
                 // call recursion on contained opened structs
                 foreach (var v in child_links){ // iterate through all links & unhook
                     if (v.Value.is_opened) 
@@ -136,11 +146,15 @@ namespace TagEditor.UI.Windows{
                 }else if (struct_UI_element is ArrayParam){
                     ArrayParam? test = struct_UI_element as ArrayParam;
                     sp = test.params_panel;
-                    key = test.key + ":" + test.selected_index;
+                    // if previous key was specified, then we use that
+                    if (previous_selected_index == -1) key = test.key + ":" + test.selected_index;
+                    else key = test.key + ":" + previous_selected_index;
                 }else if (struct_UI_element is TagblockParam){
                     TagblockParam? test = struct_UI_element as TagblockParam;
                     sp = test.params_panel;
-                    key = test.key + ":" + test.selected_index;
+                    // if previous key was specified, then we use that
+                    if (previous_selected_index == -1) key = test.key + ":" + test.selected_index;
+                    else key = test.key + ":" + previous_selected_index;
                 }else if (struct_UI_element is ResourceParam){
                     ResourceParam? test = struct_UI_element as ResourceParam;
                     sp = test.params_panel;
@@ -155,7 +169,7 @@ namespace TagEditor.UI.Windows{
                     send_info_to.try_unhook_diff(param_key);
                 }
             }
-            public void expand(bool reload){ // this function is directly called by the expand button control, opposed to the struct UI element, thats why this even exists, so those two can be entirely unrelated
+            public void expand(bool reload, int old_selected_index = -1){ // this function is directly called by the expand button control, opposed to the struct UI element, thats why this even exists, so those two can be entirely unrelated
                 if (!is_on_screen) Debug.Assert(false, "bad. this element is not visible and is attempting to expand");
 
                 // if (is_opened && reload) expand(false); // to close it so we can reopne it
@@ -203,7 +217,8 @@ namespace TagEditor.UI.Windows{
                         expand(false); // close tag
                         return;
                     }
-                    unhook_children();
+                    // we need an index to unload???
+                    unhook_children(old_selected_index);
                     //expand_button.visual.Text = "-";
                     //is_opened = true;
 
@@ -1213,6 +1228,7 @@ namespace TagEditor.UI.Windows{
             public string key;
             public string original_value;
             public string updated_value;
+            public string param_name;
             public int type;
             public UIElement? param_ui;
             public byte[] block;
@@ -1241,6 +1257,12 @@ namespace TagEditor.UI.Windows{
         }
         
         public void set_diff(UIElement element, string key, string param_name, int param_type, string original, string updated, int line_number, byte[] block, int block_offset){
+            if (module_file_header != null){
+                if (module_file_header.has_been_edited == false){
+                    container.Header = tabname + '*';
+                    module_file_header.has_been_edited = true;
+                    main.TagViewer_UpdateModulesStats();
+            }}
 
             diffs_dict.TryGetValue(key, out param_diff? diff_object);
             if (diff_object != null){
@@ -1251,6 +1273,7 @@ namespace TagEditor.UI.Windows{
                 diff_object.key = key;
                 diff_object.original_value = original;
                 diff_object.updated_value = updated;
+                diff_object.param_name = param_name;
                 diff_object.type = param_type;
                 diff_object.param_ui = element;
                 diff_object.block = block;
@@ -1496,7 +1519,14 @@ namespace TagEditor.UI.Windows{
                 // now if the clump is empty remove that too
                 if (clump.groups.Count == 0)
                     remove_diffs_clump(clump);
-        }}
+            }
+            // if we just removed the last diff, then mark this file as NOT edited
+            if (diffs_dict.Count == 0 && module_file_header != null){
+                module_file_header.has_been_edited = false;
+                container.Header = tabname;
+                main.TagViewer_UpdateModulesStats();
+            }
+        }
         public void remove_diffs_clump(diffs_clump clump){
             diffs_ui_dict.Remove(clump.current_line_number);
             diffs_panel.Children.Remove(clump.ui);
@@ -1667,6 +1697,35 @@ namespace TagEditor.UI.Windows{
 
             selec_border.RenderTransform = new TranslateTransform(0, current_highlighted_line*18);
 
+        }
+
+        // export functionality
+        public void unpack_to_files(){
+            if (module_file_header == null){
+                main.DisplayNote("file is standalone tag and does not require unpacking!", null, error_level.NOTE);
+                return;
+            }
+            SaveFileDialog saveFileDialog1 = new SaveFileDialog();
+            saveFileDialog1.ShowDialog();
+            if (!string.IsNullOrWhiteSpace(saveFileDialog1.FileName)){
+                try{// then write the bytes & then write the resources
+                    System.IO.File.WriteAllBytes(saveFileDialog1.FileName, raw_tagbytes);
+                    for (int i = 0; i < loaded_tag.resource_list.Count; i++)
+                        System.IO.File.WriteAllBytes(saveFileDialog1.FileName + "_res_" + i, loaded_tag.resource_list[i].Key);
+                } catch (Exception ex){main.DisplayNote("failed to unpack file", ex, error_level.WARNING);}
+            }
+        }
+        public void export_loaded_to_files(){
+            SaveFileDialog saveFileDialog1 = new SaveFileDialog();
+            saveFileDialog1.ShowDialog();
+            if (!string.IsNullOrWhiteSpace(saveFileDialog1.FileName)){
+                try{// setup compiler and get the bytes
+                    var v = loaded_tag.compile();
+                    System.IO.File.WriteAllBytes(saveFileDialog1.FileName, v.tag_bytes);
+                    for (int i = 0; i < v.resource_bytes.Count; i++)
+                        System.IO.File.WriteAllBytes(saveFileDialog1.FileName + "_res_" + i, v.resource_bytes[i]);
+                } catch (Exception ex) { main.DisplayNote("failed to unpack file", ex, error_level.WARNING); }
+            }
         }
     }
 }

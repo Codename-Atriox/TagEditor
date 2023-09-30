@@ -17,6 +17,8 @@ namespace TagEditor.UI.Interfaces.Editor{
             line_1.Text = _diff.line_group.target_line_number.ToString();
             type_0.Text = TagInstance.group_names[_diff.type];
             type_1.Text = TagInstance.group_names[_diff.type];
+            name_0.Text = _diff.param_name;
+            name_1.Text = _diff.param_name;
             old_value.Text = _diff.original_value;
             new_value.Text = _diff.updated_value;
         }
