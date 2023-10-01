@@ -18,7 +18,7 @@ namespace TagEditor.UI.Windows{
         MainWindow main;
         List<string> tab_keys = new();
         Dictionary<string, TagInstance> Tabs = new();
-        public void OpenTag(string tag_path, string plugins_path){
+        public void OpenTag(string tag_path){
             if (Tabs.ContainsKey(tag_path)){
                 TagInstance target_tab = Tabs[tag_path];
                 TagsTabs.SelectedIndex = TagsTabs.Items.IndexOf(target_tab.container);
@@ -78,7 +78,7 @@ namespace TagEditor.UI.Windows{
             
 
 
-            tag test = new tag(plugins_path, resource_list);
+            tag test = new tag(resource_list);
             byte[] tagbytes;
             try{tagbytes = File.ReadAllBytes(tag_path);
                 if (!test.Load_tag_file(tagbytes)){
@@ -95,7 +95,7 @@ namespace TagEditor.UI.Windows{
             tag_interface.LoadTag_UI();
             TagsTabs.SelectedIndex = TagsTabs.Items.IndexOf(tag_interface.container);
         }
-        public void OpenModuleTag(directory_item item, string plugins_path){
+        public void OpenModuleTag(directory_item item){
             if (Tabs.ContainsKey(item.name)){
                 TagInstance target_tab = Tabs[item.name];
                 TagsTabs.SelectedIndex = TagsTabs.Items.IndexOf(target_tab.container);
@@ -145,8 +145,8 @@ namespace TagEditor.UI.Windows{
             // we forgot to actually load the tag bytes from module
             // + for some reason we are failing to read resources
 
-            tag test = new tag(plugins_path, resource_list);
-            byte[]? tagbytes = null;
+            tag test = new tag(resource_list);
+            byte[] tagbytes;
             try{
                 if (item.module_file == null) throw new Exception("get rid of annoying green line test");
                 tagbytes = item.source_module.get_module_file_bytes(item.module_file);

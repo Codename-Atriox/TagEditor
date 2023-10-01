@@ -73,7 +73,6 @@ namespace TagEditor
         private TagViewer Active_TagViewer;
         private ModulesViewer Active_ModuleViewer;
 
-        public string plugins_path = "C:\\Users\\Joe bingle\\Downloads\\plugins";
 
         #region ERROR_HANDLING
         short Error_status = (short)error_level.NONE;
@@ -124,9 +123,9 @@ namespace TagEditor
             if (dlg.ShowDialog() == true) TagViewer_OpenTag(dlg.FileName);
         }
         public void TagViewer_OpenTag(string tag_path) 
-            => Active_TagViewer.OpenTag(tag_path, plugins_path);
+            => Active_TagViewer.OpenTag(tag_path);
         public void TagViewer_OpenModuleTag(directory_item tag_item)
-            => Active_TagViewer.OpenModuleTag(tag_item, plugins_path);
+            => Active_TagViewer.OpenModuleTag(tag_item);
         public void TagViewer_UpdateModules(List<module_structs.module> modules)
             => Active_ModuleViewer.update_modules(modules);
         public void TagViewer_UpdateModulesStats()
@@ -134,11 +133,13 @@ namespace TagEditor
 
         private void Button_UnpackTag(object sender, RoutedEventArgs e){
             try{Active_TagViewer.UnpackTag();
-            } catch (Exception ex){DisplayNote("Couldn't export tag (likely because you dont have a valid one open)", ex, error_level.NOTE);}
+                DisplayNote("Tag successfully unpacked", null, error_level.NOTE);
+            } catch {DisplayNote("Couldn't export tag (likely because you dont have a valid one open)", null, error_level.NOTE);}
         }
         private void Button_ExportTag(object sender, RoutedEventArgs e){
-            try{Active_TagViewer.ExportTag();
-            } catch (Exception ex){DisplayNote("Couldn't export tag (likely because you dont have a valid one open)", ex, error_level.NOTE);}
+            try{Active_TagViewer.ExportTag(); 
+                DisplayNote("Tag successfully exported", null, error_level.NOTE);
+            } catch {DisplayNote("Couldn't export tag (likely because you dont have a valid one open)", null, error_level.NOTE);;}
         }
     }
 }

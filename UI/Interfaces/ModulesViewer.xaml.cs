@@ -17,6 +17,9 @@ using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
 using Infinite_module_test;
+using Microsoft.Win32;
+using static Infinite_module_test.module_structs.module;
+using static TagEditor.MainWindow;
 
 namespace TagEditor.UI.Interfaces
 {
@@ -73,17 +76,36 @@ namespace TagEditor.UI.Interfaces
         private void Button_UnpackModule(object sender, RoutedEventArgs e){
             if (selected_module == null) return;
 
-
         }
         private void Button_AddTag(object sender, RoutedEventArgs e){
             if (selected_module == null) return;
 
+            
+            //try{
+            //    // open thing prompt and go through all 
 
+            //    module_compiler compiler = new(selected_module);
+            //    compiler.pack_tag();
+            //} catch (Exception ex) { 
+
+            //}
         }
         private void Button_CompileModule(object sender, RoutedEventArgs e){
             if (selected_module == null) return;
 
-
+            
+            try{
+                // open thing prompt and select output path
+                SaveFileDialog saveFileDialog1 = new SaveFileDialog(); 
+                saveFileDialog1.Filter = "Module file|*.module";
+                saveFileDialog1.ShowDialog();
+                if (!string.IsNullOrWhiteSpace(saveFileDialog1.FileName)){
+                    module_compiler compiler = new(selected_module);
+                    compiler.compile(saveFileDialog1.FileName);
+                }
+            } catch (Exception ex) {
+                main.DisplayNote("failed to compile module", ex, error_level.WARNING);
+            }
         }
         private void Button_CopyModule(object sender, RoutedEventArgs e){
             if (selected_module == null) return;
