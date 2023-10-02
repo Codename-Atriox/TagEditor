@@ -88,7 +88,7 @@ namespace TagEditor.UI.Windows{
 
             // load new tag tab here
             TabItem new_tag = new();
-            TagInstance tag_interface = new TagInstance(main, test, new_tag, Path.GetFileName(tag_path), tagbytes);
+            TagInstance tag_interface = new TagInstance(main, null, test, new_tag, Path.GetFileName(tag_path), tagbytes);
             TagsTabs.Items.Add(new_tag);
             tab_keys.Add(tag_path);
             Tabs.Add(tag_path, tag_interface);
@@ -171,7 +171,7 @@ namespace TagEditor.UI.Windows{
 
             // load new tag tab here
             TabItem new_tag = new();
-            TagInstance tag_interface = new TagInstance(main, test, new_tag, item.alias, tagbytes);
+            TagInstance tag_interface = new TagInstance(main, item.source_module, test, new_tag, item.alias, tagbytes);
             TagsTabs.Items.Add(new_tag);
             tab_keys.Add(item.name);
             Tabs.Add(item.name, tag_interface);
@@ -187,5 +187,6 @@ namespace TagEditor.UI.Windows{
         }
         public void UnpackTag() => get_active_window().unpack_to_files();
         public void ExportTag() => get_active_window().export_loaded_to_files();
+        public void CommitTag() => get_active_window().commit_changes();
     }
 }

@@ -80,6 +80,7 @@
             <StackPanel FlowDirection="LeftToRight" Grid.Row="1" Orientation="Horizontal" Margin="5,0,0,0">
                 <Button Content="UF" ToolTip="Unpack Active tag from module" Width="20" Click="Button_UnpackTag"/>
                 <Button Content="EF" ToolTip="Export Active loaded/Edited tag" Width="20" Click="Button_ExportTag"/>
+                <Button Content="CF" ToolTip="Commit Active loaded/Edited tag to module for recompiling" Width="20" Click="Button_CommitTag"/>
                 <Separator Width="1" Height="15" Style="{StaticResource {x:Static ToolBar.SeparatorStyleKey}}" Background="#FF3D3D3D" Margin="4,2,4,2" />
                 <Button Content="OT" Width="20" Click="Button_OpenTag"/>
                 <Button Content="OD" Width="20" Click="TagExplorer_OpenDirectory"/>

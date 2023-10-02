@@ -104,7 +104,7 @@ namespace TagEditor.UI.Interfaces
                     compiler.compile(saveFileDialog1.FileName);
                 }
             } catch (Exception ex) {
-                main.DisplayNote("failed to compile module", ex, error_level.WARNING);
+                main.DisplayNote("failed to compile module, possibly corrupted output file & module in RAM. please close and reopen this application", ex, error_level.ERROR);
             }
         }
         private void Button_CopyModule(object sender, RoutedEventArgs e){

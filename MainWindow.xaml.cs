@@ -139,7 +139,12 @@ namespace TagEditor
         private void Button_ExportTag(object sender, RoutedEventArgs e){
             try{Active_TagViewer.ExportTag(); 
                 DisplayNote("Tag successfully exported", null, error_level.NOTE);
-            } catch {DisplayNote("Couldn't export tag (likely because you dont have a valid one open)", null, error_level.NOTE);;}
+            } catch {DisplayNote("Couldn't export tag (likely because you dont have a valid one open)", null, error_level.NOTE);}
+        }
+        private void Button_CommitTag(object sender, RoutedEventArgs e){
+            try{Active_TagViewer.CommitTag(); 
+                DisplayNote("Tag successfully packed back into source module, compile module to save changes", null, error_level.NOTE);
+            } catch {DisplayNote("Couldn't export tag (likely because you dont have a valid one open)", null, error_level.NOTE);}
         }
     }
 }

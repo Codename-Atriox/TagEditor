@@ -27,13 +27,15 @@ using static TagEditor.MainWindow;
 using static TagEditor.UI.Windows.TagInstance;
 using Infinite_module_test;
 using Microsoft.Win32;
+using static System.Windows.Forms.VisualStyles.VisualStyleElement.TextBox;
 
 namespace TagEditor.UI.Windows{
     public partial class TagInstance : UserControl{
-        public TagInstance(MainWindow _main, tag _loaded_tag, TabItem _container, string tabitem_name, byte[] _raw_tagbytes)
+        public TagInstance(MainWindow _main, module_structs.module? _parent, tag _loaded_tag, TabItem _container, string tabitem_name, byte[] _raw_tagbytes)
         {
             InitializeComponent();
             main = _main;
+            parent = _parent;
             loaded_tag = _loaded_tag;
             container = _container;
             container.Content = this;
@@ -50,8 +52,32 @@ namespace TagEditor.UI.Windows{
         string tabname;
         tag loaded_tag;
         byte[] raw_tagbytes;
+        bool tag_is_modified = false;
+        bool tag_has_been_committed = false; // use this so we dont remove the edited status when we revert changes after committing
+        public void commit_changes(){
+            if (module_file_header == null || parent == null) {
+                main.DisplayNote("Tag does not need to be committed, try exporting instead", null, error_level.NOTE);
+                return;}
+            if (tag_is_modified == false){
+                main.DisplayNote("Tag has not been modified and does not need to be committed", null, error_level.NOTE);
+                return;}
+
+            // mark as not edited because we're basically saving this tag
+            tag_is_modified = false;
+            container.Header = tabname;
+
+
+            var v = loaded_tag.compile();
+            module_structs.module.module_compiler packer = new(parent);
+            packer.pack_tag(v.tag_bytes, v.resource_bytes, module_file_header.header.GlobalTagId, module_file_header.header.AssetId, (uint?)module_file_header.header.ClassId, true);
+
+            tag_has_been_committed = true;
+            module_file_header.has_been_edited = true;
+            main.TagViewer_UpdateModulesStats();
+        }
 
         public module_structs.module.unpacked_module_file? module_file_header;
+        module_structs.module? parent;
         expand_link root_expand;
         public void LoadTag_UI(){
             if (loaded_tag.root.blocks.Count != 1)
@@ -1258,10 +1284,9 @@ namespace TagEditor.UI.Windows{
         
         public void set_diff(UIElement element, string key, string param_name, int param_type, string original, string updated, int line_number, byte[] block, int block_offset){
             if (module_file_header != null){
-                if (module_file_header.has_been_edited == false){
+                if (tag_is_modified == false){
                     container.Header = tabname + '*';
-                    module_file_header.has_been_edited = true;
-                    main.TagViewer_UpdateModulesStats();
+                    tag_is_modified = true;
             }}
 
             diffs_dict.TryGetValue(key, out param_diff? diff_object);
@@ -1521,10 +1546,9 @@ namespace TagEditor.UI.Windows{
                     remove_diffs_clump(clump);
             }
             // if we just removed the last diff, then mark this file as NOT edited
-            if (diffs_dict.Count == 0 && module_file_header != null){
-                module_file_header.has_been_edited = false;
+            if (diffs_dict.Count == 0 && module_file_header != null && tag_has_been_committed == false){
+                tag_is_modified = false;
                 container.Header = tabname;
-                main.TagViewer_UpdateModulesStats();
             }
         }
         public void remove_diffs_clump(diffs_clump clump){
