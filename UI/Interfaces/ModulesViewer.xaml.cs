@@ -18,6 +18,7 @@ using System.Windows.Navigation;
 using System.Windows.Shapes;
 using Infinite_module_test;
 using Microsoft.Win32;
+using TagEditor.UI.Windows;
 using static Infinite_module_test.module_structs.module;
 using static TagEditor.MainWindow;
 
@@ -80,7 +81,26 @@ namespace TagEditor.UI.Interfaces
         private void Button_AddTag(object sender, RoutedEventArgs e){
             if (selected_module == null) return;
 
-            
+
+            try{
+                // open thing prompt and select output path
+                OpenFileDialog saveFileDialog1 = new OpenFileDialog();
+                saveFileDialog1.ShowDialog();
+                if (!string.IsNullOrWhiteSpace(saveFileDialog1.FileName)){
+                    var tags = TagViewer.get_tagbytes_with_resources(saveFileDialog1.FileName, main);
+                    if (tags == null){
+                        // main.DisplayNote("failed to ", ex, error_level.ERROR); // error note will be covered in the function itself
+                        return;
+                    }
+                    module_compiler compiler = new(selected_module);
+                    // convert resource list
+                    List<byte[]> resources = new();
+                    foreach (var v in tags.resource_list) resources.Add(v.Key);
+                    // pack tag (it'll try and grab the tagID automatically)
+                    compiler.pack_tag(tags.bytes, resources, null, null, null, false);
+                    main.DisplayNote("Tag successfully packed. compile module to save changes", null, error_level.NOTE);
+                    update_module_stats();
+            }}catch (Exception ex){ main.DisplayNote("failed to pack tag into module, possibly corrupted module in RAM. please close and reopen this application", ex, error_level.ERROR);}
             //try{
             //    // open thing prompt and go through all 
 
@@ -102,10 +122,8 @@ namespace TagEditor.UI.Interfaces
                 if (!string.IsNullOrWhiteSpace(saveFileDialog1.FileName)){
                     module_compiler compiler = new(selected_module);
                     compiler.compile(saveFileDialog1.FileName);
-                }
-            } catch (Exception ex) {
-                main.DisplayNote("failed to compile module, possibly corrupted output file & module in RAM. please close and reopen this application", ex, error_level.ERROR);
-            }
+                    main.DisplayNote("Tag successfully compiled. as of now, you must reload the application to continue editing tags.", null, error_level.ERROR);
+            }} catch (Exception ex) { main.DisplayNote("failed to compile module, possibly corrupted output file & module in RAM. please close and reopen this application", ex, error_level.ERROR);}
         }
         private void Button_CopyModule(object sender, RoutedEventArgs e){
             if (selected_module == null) return;
