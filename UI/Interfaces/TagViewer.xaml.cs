@@ -62,7 +62,7 @@ namespace TagEditor.UI.Windows{
                     try{
                         string resource_number = file_name.Substring(tag_file_name.Length + 5);
                         int resource_index = Convert.ToInt32(resource_number);
-                        byte[] resource_bytes = File.ReadAllBytes(item);
+                        byte[] resource_bytes = File.ReadAllBytes(item);  
                         // test whether the first 4 bytes are the 'hscu' magic (or whatever its supposed to be)
                         bool is_standalone_resource = resource_bytes[0..4].SequenceEqual(new byte[] { 0x75, 0x63, 0x73, 0x68 });
                         // pop it at the end if the currently index is too high (this is probably a terrible idea)
