@@ -1057,16 +1057,13 @@ namespace TagEditor.UI.Windows{
                                 new_val.reload(param_name, _struct.tag_resource_refs[(ulong)offset], _struct.tag_data, offset, param_group_sizes[type], param_key);
                                 try_hook_diff(new_val, param_key);
                             }continue;
-                        case 0x43:{ // tag_resource // FYI, this is broken & it just constantly loads the same resource struct over & over again
+                        case 0x43:{ // tag_resource // fixed but might still be broken?
+                                // make sure the resource file ref exists or generate error, even though it'd literally throw the error in the next 3 lines
+                                Debug.Assert(_struct.resource_file_refs.ContainsKey((ulong)offset), "idk why this is here, but changing it into something neater");
+
                                 ResourceParam? new_val = bobject as ResourceParam;
                                 Debug.Assert(new_val != null, "cast failed");
-                                if (!_struct.tag_block_refs.ContainsKey((ulong)offset)){
-                                    // if its already open, then close it
-                                    if (new_val.parent.is_opened)
-                                        new_val.parent.expand(false);
-                                    continue;
-                                }
-                                new_val.reload(_struct.tag_block_refs[(ulong)offset], param_key);
+                                new_val.reload(_struct.resource_file_refs[(ulong)offset], param_key);
                                 theoretical_line += new_val.parent.total_contained_lines;
                                 // then process children //
                                 if (new_val.parent.is_opened)
