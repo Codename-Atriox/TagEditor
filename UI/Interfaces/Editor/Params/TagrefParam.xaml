@@ -17,8 +17,17 @@
         </Grid.ColumnDefinitions>
         <TextBlock x:Name="Namebox" Text="SampleParamName" Foreground="#FFD6D6D6" Margin="0,0,5,0" />
         <Grid Grid.Column="1">
-            <TextBox Style="{DynamicResource ParamStyle}" x:Name="GroupBox" Text="atag" Foreground="#FF9DEF5C"/>
+            <Button x:Name="GroupBox" Content="atag" Foreground="#FF9DEF5C" Padding="1,0,1,0" Click="GroupBox_Click"/>
             <Separator x:Name="error_marker1" Height="2" Background="Red" VerticalAlignment="Bottom" Margin="0,0,0,0" Visibility="Collapsed"/>
+            <Popup x:Name="groups_popup" IsOpen="False" LostFocus="groups_popup_LostFocus" StaysOpen="False" PopupAnimation="Slide" AllowsTransparency="True">
+                <Border BorderThickness="1" Background="#FF1A1A1A" BorderBrush="#FF7160E8">
+                    <ScrollViewer>
+                        <ListView x:Name="groups_list">
+
+                        </ListView>
+                    </ScrollViewer>
+                </Border>
+            </Popup>
         </Grid>
         <Grid Grid.Column="2">
             <Button x:Name="TagIDBox" Content="01452367" Foreground="#FFCE8866" Click="call_open_tag"/>

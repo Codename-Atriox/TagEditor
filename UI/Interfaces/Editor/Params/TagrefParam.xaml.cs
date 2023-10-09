@@ -55,8 +55,8 @@ namespace TagEditor.UI.Interfaces.Params{
 
             int value_test = BitConverter.ToInt32(parent_block[(block_offset + 0x14)..(block_offset + 0x18)]);
             if (value_test == -1)
-                GroupBox.Text = "NULL";
-            else GroupBox.Text = Reverse(System.Text.Encoding.Default.GetString(parent_block[(block_offset+0x14)..(block_offset + 0x18)]));
+                GroupBox.Content = "NULL";
+            else GroupBox.Content = Reverse(System.Text.Encoding.Default.GetString(parent_block[(block_offset+0x14)..(block_offset + 0x18)]));
                 //BitConverter.ToSingle(parent_block[block_offset..(block_offset + 4)]).ToString();
         }
         public static string Reverse(string s)
@@ -75,6 +75,28 @@ namespace TagEditor.UI.Interfaces.Params{
         private void call_open_tag(object sender, RoutedEventArgs e)
         {
             tags_explorer.try_open_tag(TagName, TagIDname);
+        }
+
+        private void groups_popup_LostFocus(object sender, RoutedEventArgs e)
+        {
+
+        }
+
+        private void GroupBox_Click(object sender, RoutedEventArgs e){
+
+            if (groups_popup.IsOpen == true)
+                return; // we should close the dropdown if its already open
+            e.Handled = true;
+            groups_popup.IsOpen = true;
+
+            // we now need to populate the list thing
+            tags_explorer.main.module;
+
+
+
+            groups_popup.Focus();
+            Keyboard.Focus(groups_popup);
+            
         }
 
 
