@@ -18,24 +18,30 @@
         <TextBlock x:Name="Namebox" Text="SampleParamName" Foreground="#FFD6D6D6" Margin="0,0,5,0" />
         <Grid Grid.Column="1">
             <Button x:Name="GroupBox" Content="atag" Foreground="#FF9DEF5C" Padding="1,0,1,0" Click="GroupBox_Click"/>
-            <Separator x:Name="error_marker1" Height="2" Background="Red" VerticalAlignment="Bottom" Margin="0,0,0,0" Visibility="Collapsed"/>
-            <Popup x:Name="groups_popup" IsOpen="False" LostFocus="groups_popup_LostFocus" StaysOpen="False" PopupAnimation="Slide" AllowsTransparency="True">
+            <Popup x:Name="groups_popup" IsOpen="False" StaysOpen="False" PopupAnimation="Slide" AllowsTransparency="True">
                 <Border BorderThickness="1" Background="#FF1A1A1A" BorderBrush="#FF7160E8">
-                    <ScrollViewer>
-                        <ListView x:Name="groups_list">
+                    <!--ScrollViewer x:Name="groups_scroll"-->
+                        <ListView x:Name="groups_list" SelectionChanged="groups_list_SelectionChanged">
 
                         </ListView>
-                    </ScrollViewer>
+                    <!--/ScrollViewer-->
                 </Border>
             </Popup>
         </Grid>
         <Grid Grid.Column="2">
-            <Button x:Name="TagIDBox" Content="01452367" Foreground="#FFCE8866" Click="call_open_tag"/>
-            <Separator x:Name="error_marker2" Height="2" Background="Red" VerticalAlignment="Bottom" Margin="0,0,0,0" Visibility="Collapsed"/>
+            <Button x:Name="TagIDBox" Content="01452367" Foreground="#FFCE8866" Padding="1,0,1,0" Click="TagIDBox_Click" />
+            <Popup x:Name="tag_popup" IsOpen="False" StaysOpen="False" PopupAnimation="Slide" AllowsTransparency="True">
+                <Border BorderThickness="1" Background="#FF1A1A1A" BorderBrush="#FF7160E8">
+                    <!--ScrollViewer x:Name="tags_scroll"-->
+                        <ListView x:Name="tags_list" SelectionChanged="tags_list_SelectionChanged">
+
+                        </ListView>
+                    <!--/ScrollViewer-->
+                </Border>
+            </Popup>
         </Grid>
         <Grid Grid.Column="3">
-            <TextBox Style="{DynamicResource ParamStyle}" x:Name="AssetIDBox" Text="ffffffff00000000" Foreground="#FF8C8C8C"/>
-            <Separator x:Name="error_marker3" Height="2" Background="Red" VerticalAlignment="Bottom" Margin="0,0,0,0" Visibility="Collapsed"/>
+            <Button x:Name="AssetIDBox" Content="ffffffff00000000" Click="call_open_tag" Padding="1,0,1,0" Foreground="#FF8C8C8C"/>
         </Grid>
     </Grid>
 </UserControl>

@@ -803,7 +803,7 @@ namespace TagEditor.UI.Windows{
                                 try_hook_diff(param, param_key); 
                             }continue;
                         case 0x41:{ // _field_reference_v2
-                                TagrefParam new_val = new(param_name, _struct.tag_data, offset, main.Active_TagExplorer, param_key);
+                                TagrefParam new_val = new(this, type, actual_line, param_name, _struct.tag_data, offset, main.Active_TagExplorer, param_key);
                                 container.Children.Add(new_val);
                                 try_hook_diff(new_val, param_key); 
                             }continue;
@@ -1517,7 +1517,8 @@ namespace TagEditor.UI.Windows{
                 case 0x40: // _field_block_v2
                     throw new Exception("Unimplemented revert type!!"); //TagblockParam
                 case 0x41: // _field_reference_v2
-                    throw new Exception("Unimplemented revert type!!"); //TagrefParam
+                    TagrefParam.revert_value(diff.original_value, diff.param_ui as TagrefParam, diff.block, diff.offset);
+                    return;
                 case 0x42: // _field_data_v2
                     throw new Exception("Unimplemented revert type!!"); //DataParam
                 case 0x43: // tag_resource

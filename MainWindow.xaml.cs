@@ -71,7 +71,7 @@ namespace TagEditor
         private HexViewer Active_HexViewer;
         public TagExplorer Active_TagExplorer;
         private TagViewer Active_TagViewer;
-        private ModulesViewer Active_ModuleViewer;
+        public ModulesViewer Active_ModuleViewer;
 
 
         #region ERROR_HANDLING

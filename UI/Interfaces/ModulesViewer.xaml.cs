@@ -35,7 +35,7 @@ namespace TagEditor.UI.Interfaces
         }
         string[] module_names_display = new string[0];
         List<string> modules_names = new();
-        List<module_structs.module> active_modules = new();
+        public List<module_structs.module> active_modules = new();
         module_structs.module? selected_module = null;
         public void update_modules(List<module_structs.module> new_modules){
             active_modules = new_modules;
